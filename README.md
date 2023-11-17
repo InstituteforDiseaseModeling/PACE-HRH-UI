@@ -7,7 +7,7 @@ Note: the following instructions work best when used with RStudio.
 ### Clone the repository 
 
 ```
-git clone git@github.com:gatesfoundation/PACE-HRH-UI.git
+git clone git@github.com:InstituteforDiseaseModeling/PACE-HRH-UI.git
 ```
 ### Open the project 
 Double-click the .Rproj file to launch the project in RStudio. 
