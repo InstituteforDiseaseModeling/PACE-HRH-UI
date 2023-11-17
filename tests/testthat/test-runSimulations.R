@@ -1,0 +1,17 @@
+library(mockr)
+test_that("simulation check", {
+  setwd("../..")
+  source("R/logger.R")
+  source("R/runSimulations.R")
+  pacehrh::SetInputExcelFile("orig_config/model_inputs.xlsx")
+  scenarios <- readxl::read_excel("orig_config/model_inputs.xlsx", sheet="Scenarios")
+  with_mock(loggerServer = function(id, message=NULL, three_dots = FALSE) print(id), {
+    rv <- run_pacehrh_simulation( scenarios ,2, c(2020,2022))
+    expect_true(!is.null(rv$results))
+    expect_true(!is.null(rv$start_year))
+    expect_true(!is.null(rv$end_year))
+    expect_true(!is.null(rv$Mean_ServiceCat))
+    expect_true(!is.null(rv$Mean_MonthlyTask))
+    expect_true(!is.null(rv$Stats_TotClin))
+    })
+  })

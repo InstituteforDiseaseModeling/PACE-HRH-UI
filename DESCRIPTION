@@ -1,0 +1,13 @@
+Package: PACE-HRH-UI
+Title: PACE-HRH-UI
+Version: 0.0.0.1
+Author: Charles Eliot, Brittany Hagedorn, Bee Workeneh
+Description: A shiny app for the PACE-HRH package which "models the healthcare needs of a given population
+               so you can more effectively plan what healthcare worker resources will be necessary
+               to provide a wide range of healthcare services".
+License: 
+OurLicenseText: is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. To view a copy of this license, visit
+OurLicenseLink: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.0.0

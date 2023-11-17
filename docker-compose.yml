@@ -1,0 +1,14 @@
+
+version: '3.7'
+services:
+  client:
+    build:
+        context: ..
+        dockerfile: Dockerfile
+    volumes:
+      - ./R:/srv/shiny-server/R
+      - ./app.R:/srv/shiny-server/app.R
+    ports:
+      - "3838:3838"
+      - "80:80"
+      

@@ -1,0 +1,235 @@
+body {
+    padding-top: 70px;
+}
+
+.sticky-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #24323c;
+    color: white;
+    z-index: 2000;
+    display: flex;
+}
+
+.logo {
+    margin: 5px 0 5px 0;
+    display: inline-block;
+    height: 35px;
+}
+
+.copy-text {
+    font-size: 14px;
+    color: #b1bcc5;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+.terms{
+    font-size: 14px;
+    text-align: center;
+    color: #b8860b;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+ul.navbar-nav{
+    float: right!important;
+}
+
+.content {
+    min-width: 48rem;
+    width: 70%;
+    margin: 0 auto;
+}
+  
+.contentText {
+  
+          font-size: 16px;
+          text-align: justify;
+          text-justify: inter-word;
+          margin-top: 5px;
+}
+  
+.titleText {
+          margin: 20px 20px 10px 0px;
+}
+
+.title, .titleText {
+    color: #F1815E;
+}
+.title::before{
+    display: block; 
+    content: " "; 
+    margin-top: -200px; 
+    height: 200px; 
+    visibility: hidden; 
+    pointer-events: none;
+}
+
+/* license modal styles */
+
+.licenseTable thead {
+    position: sticky;
+    top: -20px;
+    background-color: white;
+    border-bottom: 1px solid lightgrey;
+}
+.license {
+    border: solid 1px lightgrey;
+    -moz-border-radius-bottomright: 5px;
+    border-top: none;
+    padding:20px;
+    height:calc(100vh - 300px);
+    overflow-y: auto;
+
+}
+  
+.modal-dialog {
+    height:70%;
+}
+  
+ 
+.licensePanel, .licenseTabSet {
+    height:100%;
+}
+  
+.licenseTable  {
+    width:100%;
+    table-layout: fixed;
+}
+  
+.licenseTable tr {
+    border-bottom: 1px solid lightgrey;
+}
+
+.licenseTable tr:last-child {
+    border-bottom: none;
+}
+.licenseTable td {
+    padding:5px;
+    word-wrap: break-word;
+}
+
+
+.visual-placeholder {
+    padding: 60px;
+    color: darkgray;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+}
+.visual-placeholder-xl {
+    padding: 300px;
+    color: darkgray;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+}
+.legend i{
+    float: left;
+}
+
+/*logger styles*/
+.sticky-logger {
+    position: fixed;
+    bottom: 45px;
+    width: 100%;
+    background-color: #333333;
+    color: white;
+    z-index: 2000;
+    display: flex;
+}
+
+.log-content {
+  padding: 0px;
+  width: 100%;
+}
+
+.log-header {
+  background-color:#333333;
+  border-bottom: lightgrey 1px solid;
+}
+
+.alert, .alert-info {
+  background-color: rgba(0,0,0,0)!important;
+  border-color: rgba(0,0,0,0)!important;
+  padding: 2px 5px!important;
+  margin: 0!important;
+}
+
+.lds-ellipsis {
+  display: inline-block;
+  position: relative;
+}
+
+.lds-ellipsis div {
+  position: absolute;
+  top: -6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
+.lds-ellipsis div:nth-child(1) {
+  left: 8px;
+  animation: lds-ellipsis1 0.6s infinite;
+}
+
+.lds-ellipsis div:nth-child(2) {
+  left: 20px;
+  animation: lds-ellipsis2 0.6s infinite;
+}
+
+.lds-ellipsis div:nth-child(3) {
+  left: 32px;
+  animation: lds-ellipsis3 0.6s infinite;
+}
+
+@keyframes lds-ellipsis1 {
+  0%, 20% {
+    transform: scale(0);
+  }
+  30% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes lds-ellipsis2 {
+  0% {
+    transform: scale(0);
+  }
+  30%, 50% {
+    transform: scale(0);
+  }
+  60% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes lds-ellipsis3 {
+  0%, 60% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+
+.btn a {
+  color: white!important;
+}
+
