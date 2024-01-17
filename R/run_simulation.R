@@ -23,19 +23,19 @@ sim_tabs <- function(ns){
            ),
            fluidRow(
              column(6,
-                    textInput(ns("startyear"), "Start Year")      
+                    numericInput(ns("start_year"), "Start Year", 2020, min=2000, max=2040)      
              ),
              column(6,
-                    textInput(ns("catchment_pop"), "Catchment Pop")      
+                    numericInput(ns("catchment_pop"), "Catchment Pop", 10000, min=1000, max=100000)      
              ),
              
            ),
            fluidRow(
              column(6,
-                    textInput(ns("endyear"), "End Year")      
+                    numericInput(ns("end_year"), "End Year", 2040, min =2000, max=2090)      
              ),
              column(6,
-                    textInput(ns("hrs_wk"), "Hours worked per week")      
+                    numericInput(ns("hrs_wk"), "Hours worked per week", 40, min=1, max = 60)      
              )
              
            ),
@@ -56,13 +56,13 @@ sim_tabs <- function(ns){
   tabPanel(sim_pages[2], 
            tabsetPanel(
              id ="validation",
-             plotTabUI(id = "population-tab",
+             plotTabUI(id = ns("population-tab"),
                        title = "Population Pyramid"),
-             plotTabUI(id = "fertility-tab",
+             plotTabUI(id = ns("fertility-tab"),
                        title = "Fertility Rates"),
-             plotTabUI(id = "mortality-tab",
+             plotTabUI(id = ns("mortality-tab"),
                        title = "Mortality Rates"),
-             plotTabUI(id = "disease-tab",
+             plotTabUI(id = ns("disease-tab"),
                        title = "Disease Incidence"),
            )
   ),
@@ -72,23 +72,26 @@ sim_tabs <- function(ns){
            fluidRow(column(6, offset= 3,  numericInput(ns("num_trials"), "Number of Replications:", 100))
            ),
            fluidRow(column(6, offset = 3, actionButton(ns("run_simBtn"), "Run Simulations"))
+           ),
+           fluidRow(
+             column(12,  HTML("<br><br><br><br><br><br><br><br><br><br>"))
            )
   
   ),
   tabPanel(sim_pages[4], 
            fluidRow(
-             column(6, actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots")), 
-             column(6, actionButton(ns("save_resultsBtn"), "Save Results for later comparison"))
+             column(4, actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots"), ), 
+             column(4, offset=2, actionButton(ns("save_resultsBtn"), "Save Results for later comparison"))
            ),
            fluidRow(
              column(12, HTML("<br><br>"))
            ),
            fluidRow(
-             column(6, downloadButton(ns("download_resultsBtn"), "Download Results (.csv)")), 
-             column(6, actionButton(ns("compareBtn"), "Select Previous runs to compare"))
+             column(4, downloadButton(ns("download_resultsBtn"), "Download Results (.csv)")), 
+             column(4, offset=2, actionButton(ns("compareBtn"), "Select Previous runs to compare"))
            ),
            fluidRow(
-             column(12,  HTML("<br><br>"))
+             column(12,  HTML("<br><br><br><br><br><br><br><br><br><br>"))
            )
   )
 )}
@@ -132,12 +135,13 @@ runSimulationServer <- function(id, config_file, store = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # initialize the page to 1
+    ### initialize the page to configuration
     rv <- reactiveValues(page = 1)
     output$step_title <- renderUI({
       HTML(paste0("<h2>", sim_pages[rv$page], "</h2>"))
     })
 
+    ### handle conditional button appearance
     observe({
       hide("prevDiv")
       hide("nextDiv")
@@ -153,6 +157,7 @@ runSimulationServer <- function(id, config_file, store = NULL) {
       }
     })
 
+    ### navigate Page to the corresponding UI
     navPage <- function(direction, sim=FALSE) {
       if (sim){
         # go to sim Page 
@@ -172,10 +177,31 @@ runSimulationServer <- function(id, config_file, store = NULL) {
       }
     }
     
-    observeEvent(input$prevBtn, navPage(-1))
-    observeEvent(input$nextBtn, navPage(1))
-    observeEvent(input$skipBtn, navPage(0, sim=TRUE))
+    ### handle main parameters
+    save_values <- function(){
+      if (rv$page==1){
+        rv$start_year = input$start_year
+        rv$end_year = input$endyear
+        rv$catchment_pop = input$catchment_pop
+        rv$hrs_wk = input$hrs_wk
+        rv$region = input$region
+        rv$hrh_utilization = input$hrh_utilization
+        print(rv$start_year)
+      }
+    }
     
+    observeEvent(input$prevBtn, navPage(-1))
+    observeEvent(input$nextBtn, {
+      save_values()
+      navPage(1)
+    })
+    
+    observeEvent(input$skipBtn, {
+      save_values()
+      navPage(0, sim=TRUE)
+    })
+    
+    ### handle optional parameters
     observeEvent(input$optional_params, {
       showModal(modalDialog(
         title = "Enter some optional Values",
@@ -194,7 +220,7 @@ runSimulationServer <- function(id, config_file, store = NULL) {
     
     values <- reactiveValues(
       pop1 = read_excel(config_file, sheet = "TotalPop"),
-      season1 = read_excel(config_file, sheet = "SeasonalityCurves"),
+      season1 = read_excel(config_file, sheet = "SeasonalityCurves")
     )
     
     # Render the pop data
@@ -222,7 +248,6 @@ runSimulationServer <- function(id, config_file, store = NULL) {
       removeModal()
       print(paste0("value is ", head(values$pop1))) # Debugging
     })
-    
-    
+  
   })
 }
