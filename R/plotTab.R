@@ -11,7 +11,7 @@ plotTabUI <- function(id=NULL, title=NULL) {
            fluidRow(
              style = "margin: 0 5px;",
              plotlyOutput(ns("plot")),
-             div(class="visual-placeholder-xl")
+             # div(class="visual-placeholder-xl")
            ))
 }
 
