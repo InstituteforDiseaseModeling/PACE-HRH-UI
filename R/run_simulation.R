@@ -126,7 +126,9 @@ runSimulationUI <- function(id) {
       ),
     
       fluidRow(
-        column(3, offset=9, div(id=ns("skipAll"), actionButton(ns("skipBtn"), "Skip To Run Simulation"), align="center"))
+        column(3, offset=9, div(id=ns("skipAll"), actionButton(ns("skipBtn"), "Skip To Run Simulation"), align="center")),
+        bsTooltip(ns("skipBtn"), "Proceed directly to run simulation, Warning: Unchecked inputs may have problems.",
+                  "left", options = list(container = "body"))
       )
     )
 }
@@ -134,9 +136,13 @@ runSimulationUI <- function(id) {
 runSimulationServer <- function(id, config_file, store = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
-    ### initialize the page to configuration
-    rv <- reactiveValues(page = 1)
+    ### initialize variables used in simulation steps
+    rv <- reactiveValues(page = 1, 
+                         scenarios_input = read_excel(config_file, sheet = "Scenarios"),
+                         pop_input = read_excel(config_file, sheet = "TotalPop"),
+                         seasonality_input = reactive(data.frame())
+    )
+    
     output$step_title <- renderUI({
       HTML(paste0("<h2>", sim_pages[rv$page], "</h2>"))
     })
@@ -205,48 +211,76 @@ runSimulationServer <- function(id, config_file, store = NULL) {
     observeEvent(input$optional_params, {
       showModal(modalDialog(
         title = "Enter some optional Values",
-        size = "l",  # large size,
-        tabsetPanel(
-          id = ns("tabset_optional_data"),
-          tabPanel("Population Pyramid", DTOutput(ns("pop_data"))),
-          tabPanel("Seasonality Curves", DTOutput(ns("seasonality_data"))),
+        # size = "l",  # large size,
+        fluidPage(
+          selectInput(ns("scenario"), "Choose a Scenario to View or Modify",
+                      choices = rv$scenarios_input$UniqueID), 
+          tabsetPanel(
+            id = ns("tabset_optional_data"),
+            tabPanel("Population Pyramid", 
+                      tagList(
+                        DTOutput(ns("preview_pop")),
+                        fileInput(ns("file_pop"), "Upload Population File", accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv"))
+                      )
+            ),
+            tabPanel("Seasonality Curves",
+                     tagList(
+                       DTOutput(ns("preview_seasonality")),
+                       fileInput(ns("file_seasonality"), "Upload Seasonality File", accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv"))
+                     )
+            )
+          )
         ),
         footer = tagList(
           modalButton("Cancel"),
           actionButton(ns("saveValue"), "Save")
         )
       ))
+      
     })
     
-    values <- reactiveValues(
-      pop1 = read_excel(config_file, sheet = "TotalPop"),
-      season1 = read_excel(config_file, sheet = "SeasonalityCurves")
-    )
+    observeEvent(input$scenario, {
     
-    # Render the pop data
-    output$pop_data <- renderDT({
-      datatable(values$pop1, editable = TRUE)
+      print(input$scenario)
+      
+      rv$scenario_selected <- input$scenario
+      rv$seasonality_sheet <- rv$scenarios_input$sheet_SeasonalityCurves[rv$scenarios_input$UniqueID==input$scenario]
+      rv$seasonality_input <- read_excel(config_file, sheet = rv$seasonality_sheet)
+      
+    })
+    output$preview_pop <- renderDT({
+      rv$pop_input
     })
     
-    # Render the second editable data table
-    output$seasonality_data <- renderDT({
-      datatable(values$season1, editable = TRUE)
+    output$preview_seasonality <- renderDT({
+      rv$seasonality_input
     })
     
-    # Observe changes in edit
-    observeEvent(input$pop_data_cell_edit, {
-      info <- input$pop_data_cell_edit
-      print(info)  # For debugging
-      values$pop1 <- editData(values$pop1, info)
+    observeEvent(input$file_pop, {
+      if (!is.null(input$file_pop)) {
+        rv$pop_input <- read.csv(input$file_pop$datapath)
+      }
+    })
+
+    observeEvent(input$file_seasonality, {
+      if (!is.null(input$file_seasonality)) {
+        rv$seasonality_input <- read.csv(input$file_seasonality$datapath)
+      }
     })
     
     observeEvent(input$saveValue, {
-      # Save the value when 'Save' button is clicked
-      print("TBD: how / what to save?")
-      
+     
       # Close the modal after saving
       removeModal()
-      print(paste0("value is ", head(values$pop1))) # Debugging
+      print(paste0("value is ", head(rv$pop_input))) # Debugging
+      
+      # save all changes to a new config (input_file)
+      file.copy(config_file, input_file, overwrite = TRUE)
+      wb <- openxlsx::loadWorkbook(input_file)
+      
+      openxlsx::writeData(wb, "TotalPop", rv$pop_input)
+      openxlsx::writeData(wb, rv$seasonality_sheet , rv$seasonality_input)
+      openxlsx::saveWorkbook(wb, input_file, overwrite = TRUE)
     })
   
   })

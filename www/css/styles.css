@@ -233,3 +233,8 @@ ul.navbar-nav{
   color: white!important;
 }
 
+.modal-dialog .modal-content {
+  max-height: 90vh; /* Adjust the height as needed */
+  overflow-y: auto; /* Enable vertical scrolling */
+  margin-bottom: 120px;
+}

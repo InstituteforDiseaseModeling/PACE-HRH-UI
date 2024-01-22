@@ -2,6 +2,7 @@ library(shiny)
 library(shinyStore)
 
 ui <- fluidPage(
+                includeCSS("www/css/styles.css"),
                 tags$head(
                   tags$link(rel="shortcut icon", href = "assets/favicon.ico"),
                   tags$link(rel ="stylesheet", type="text/css", href = "css/styles.css"),

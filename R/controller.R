@@ -186,7 +186,7 @@ controllerServer <- function(id, store = NULL, input_file) {
     })
 
     observeEvent(input$reset, {
-      reload_original_config()
+      # reload_original_config()
       session$reload()
     })
 
