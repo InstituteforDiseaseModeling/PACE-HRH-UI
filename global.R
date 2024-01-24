@@ -33,4 +33,11 @@ if (grepl("zip", content_type, fixed = TRUE)) {
 } 
 
 input_file <- "config/model_inputs_user.xlsx"
+
+# Preload population options
+
+preload_pop_files <- list.files("config/population", full.names = TRUE)
+preload_pop_list <- setNames(preload_pop_files, gsub(".csv","", gsub("_", " ", basename(preload_pop_files))))
+
+
 # pacehrh::SetInputExcelFile(config_file)

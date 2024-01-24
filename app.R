@@ -3,6 +3,7 @@ library(shinyStore)
 
 ui <- fluidPage(
                 includeCSS("www/css/styles.css"),
+                useShinyjs(),
                 tags$head(
                   tags$link(rel="shortcut icon", href = "assets/favicon.ico"),
                   tags$link(rel ="stylesheet", type="text/css", href = "css/styles.css"),
@@ -49,6 +50,7 @@ server <- function(input, output,session){
     removeModal()
     updateStore(session, "greeting_modal_shown", value = "shown")
     message("setting 'greeting_modal_shown' to TRUE")
+    shinyjs::runjs('let r = (Math.random() + 1).toString(36).substring(7); localStorage.setItem("uid", r);')
   })
   
   observeEvent(input$store, {

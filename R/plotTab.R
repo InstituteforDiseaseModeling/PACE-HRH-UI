@@ -31,3 +31,16 @@ plotTabServer <- function(input, output, session, plotting_function, rv) {
 }
 
 
+# Define the simple plot Module without tabpanel
+simpleplotUI <- function(id,title) {
+  ns <- NS(id)
+  plotOutput(ns("plot"))
+}
+
+simpleplotServer <- function(id, plotFunction, rv) {
+  moduleServer(id, function(input, output, session) {
+    output$plot <- renderPlot({
+      plotFunction(rv)  # Call the function to get the ggplot object
+    })
+  })
+}
