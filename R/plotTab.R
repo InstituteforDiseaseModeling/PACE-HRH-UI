@@ -16,8 +16,8 @@ plotTabUI <- function(id=NULL, title=NULL) {
 }
 
 
-plotTabServer <- function(input, output, session, plotting_function, rv) {
-
+plotTabServer <- function(id, plotting_function, rv) {
+    moduleServer(id, function(input, output, session) {
     output$plot <- renderPlotly({
 
       if (!is.null(rv$results) ) {
@@ -28,6 +28,7 @@ plotTabServer <- function(input, output, session, plotting_function, rv) {
         NULL
       }
     })
+  })
 }
 
 

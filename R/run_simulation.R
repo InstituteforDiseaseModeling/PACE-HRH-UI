@@ -132,16 +132,11 @@ runSimulationUI <- function(id) {
     )
 }
 
-runSimulationServer <- function(id, config_file, return_event, store = NULL) {
+runSimulationServer <- function(id, config_file, return_event, rv, store = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    ### initialize variables used in simulation steps
-    rv <- reactiveValues(page = 1, 
-                         ### Simplfy to assume only one scenario case
-                         scenarios_input = first(read_excel(config_file, sheet = "Scenarios"))
-    )
-    
+   
     # Set sheet data based on input scenario
     observe({
       rv$scenario_selected <- rv$scenarios_input$UniqueID
@@ -213,11 +208,12 @@ runSimulationServer <- function(id, config_file, return_event, store = NULL) {
       if (rv$page==1){
         rv$start_year <- input$start_year
         rv$end_year <- input$end_year
-        rv$catchment_pop <- input$catchment_pop
-        rv$hrs_wk <- input$hrs_wk
+        rv$scenarios_input$BaselinePop <- input$catchment_pop
+        rv$scenarios_input$HrsPerWeek <- input$hrs_wk
+        rv$scenarios_input$MaxUtilization <- input$hrh_utilization
+        rv$scenarios_input$DeliveryModel <- ifelse(is.null(rv$scenarios_input$DeliveryModel), "Basic", rv$scenarios_input$DeliveryModel)
         rv$region <- input$region
-        rv$hrh_utilization <- input$hrh_utilization
-        print(rv$start_year)
+        print(rv$scenarios_input)
       }
     }
     
@@ -353,6 +349,13 @@ runSimulationServer <- function(id, config_file, return_event, store = NULL) {
           
           if  (!file.exists(input_file)){
             file.copy(config_file, input_file, overwrite = TRUE)
+          }
+          
+          
+          if ("RegionSelect" %in% excel_sheets(input_file)){
+            command = paste0("cd vbscript & cscript updateRegion.vbs ", rv$region, " ../", input_file)
+            system(command ="cmd", input=command,  wait =TRUE)
+            
           }
           
           # save all changes to a new config (input_file)

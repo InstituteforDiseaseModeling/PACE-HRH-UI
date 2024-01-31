@@ -4,6 +4,8 @@ library(pacehrh)
 library(readxl)
 library(tidyr)
 
+options(devtools.upgrade = "never")
+
 # parse DESCRIPTION file 
 desc_content <- description$new()
 project_info <- desc_content[[".__enclos_env__"]][["private"]][["data"]]
@@ -15,6 +17,11 @@ our_license_text <- paste (project_title,
 
 our_license_link <- project_info[["OurLicenseLink"]][["value"]]
 
+# Install pacehrh package
+devtools::install_github('InstituteforDiseaseModeling/PACE-HRH', 
+                         subdir='pacehrh',  
+                         force = TRUE, 
+                         dependencies = TRUE)
 # download sample config
 print("download sample config...")
 config_url <- "https://raw.githubusercontent.com/InstituteforDiseaseModeling/PACE-HRH/main/config/model_inputs_demo.xlsx"
@@ -45,7 +52,10 @@ preload_pop_list <- setNames(preload_pop_files, gsub(".csv","", gsub("_", " ", b
 # Preload Region if available
 
 region_list = "config/regions.txt"
-file.remove(region_list)
+if (file.exists(region_list)){
+  file.remove(region_list)
+}
+
 if ("RegionSelect" %in% excel_sheets(config_file)){
   command = paste0("cd vbscript & cscript selectRegion.vbs ../", config_file)
   system(command ="cmd", input=command,  wait =TRUE)

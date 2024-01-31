@@ -16,8 +16,8 @@ ggplotTabUI <- function(id=NULL, title=NULL) {
 }
 
 
-ggplotTabServer <- function(input, output, session, plotting_function, rv) {
-
+ggplotTabServer <- function(id, plotting_function, rv) {
+  moduleServer(id, function(input, output, session) {
     output$plot <- renderPlot({
 
       if (!is.null(rv$results) ) {
@@ -28,6 +28,7 @@ ggplotTabServer <- function(input, output, session, plotting_function, rv) {
         NULL
       }
     })
+  })
 }
 
 

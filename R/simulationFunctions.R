@@ -22,7 +22,7 @@ run_pacehrh_simulation <- function(rv, input_file){
   loggerServer("logger", "Initializing", three_dots=T)
   
   pacehrh::Trace(TRUE)
-  pacehrh::SetInputExcelFile(input_file)
+  pacehrh::SetInputExcelFile(rv$input_file)
   pacehrh::InitializePopulation()
   pacehrh::InitializeScenarios(loadFromExcel = FALSE)
   pacehrh::InitializeStochasticParameters()
@@ -35,65 +35,69 @@ run_pacehrh_simulation <- function(rv, input_file){
   e$scenarios <- rv$scenarios_input
   
   results_dir <- file.path(result_root, rv$run_name)
-  dir.create(file.path(results_dir), recursive = TRUE)
-  print(paste0("result will be saved to:", results_dir))
   
-  date <- Sys.Date()
-  usefuldescription <- "demo"
-  
-  results <- list()
-  scenario_name <- e$scenarios$UniqueID[1]
+  tryCatch({
     
-  loggerServer("logger", paste0("Running scenario > ", scenario_name) )
-  
-  result <- pacehrh::RunExperiments(scenarioName = scenario_name,
+    dir.create(file.path(results_dir), recursive = TRUE)
+    print(paste0("result will be saved to:", results_dir))
+    
+    date <- Sys.Date()
+    usefuldescription <- "demo"
+    
+    results <- list()
+    scenario_name <- e$scenarios$UniqueID[1]
+    
+    loggerServer("logger", paste0("Running scenario > ", scenario_name) )
+    
+    result <- pacehrh::RunExperiments(scenarioName = scenario_name,
                                       trials = rv$trial_num,
                                       debug = FALSE)
-  
-  # extract population predictions of the model
-  popsummary <- SaveSuiteDemographics(result) %>%
-    pivot_longer(c("Female", "Male"), names_to ="Gender", values_to = "Population")
-  
-  # extract fertility rates predictions of the model
-  fertilityrates <- GetSuiteRates(result, "femaleFertility")
-  
-  results[[scenario_name]] <- result
     
-  #save simulation results to csv files, by scenario
-  filename_pattern <- paste(usefuldescription, scenario_name, date, sep = "_")
-  filename <- file.path(results_dir, paste0(filename_pattern, '.csv'))
-  pacehrh::SaveSuiteResults(result, filename, scenario_name, 1)
-
-  new_rv$results <- results
-  new_rv$popsummary <- popsummary
-  new_rv$fertilityrates <- fertilityrates
-  
-  # loggerServer("logger", "Reading and collating result", three_dots=TRUE)
-  # DR_test <- pacehrh:: ReadAndCollateSuiteResults(files = results_files, preProcFunc = \(x)x)
-  # 
-  # loggerServer("logger", "Computing Cadre allocation", three_dots=TRUE)
-  # CA <- pacehrh:::ComputeCadreAllocations(DR_test)
-  # 
-  # loggerServer("logger", "Computing summary stats", three_dots=TRUE)
-  # SS <- pacehrh:::ComputeSummaryStats(DR_test, CA)
-  # 
-  # loggerServer("logger", "Attaching scenario details", three_dots=TRUE)
-  # new_rv$Mean_ServiceCat <- SS$Mean_ServiceCat %>%
-  #   inner_join(e$scenarios, by= c("Scenario_ID" = "UniqueID"))
-  # new_rv$Mean_MonthlyTask <- SS$Mean_AnnualTask %>% 
-  #   inner_join(e$scenarios, by=c("Scenario_ID" = "UniqueID"))
-  # new_rv$Stats_TotClin <- SS$Stats_TotClin %>%
-  #   inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek"))
-  # new_rv$Mean_ClinCat <- SS$Mean_ClinCat %>%
-  #   inner_join(e$scenarios, by=c("Scenario_ID"="UniqueID", "WeeksPerYr"))
-  # new_rv$Mean_Total <- SS$Mean_Total %>%
-  #   inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek"))
-  # new_rv$Stats_ClinMonth <- SS$Stats_ClinMonth %>%
-  #   inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek"))
-  # new_rv$ByRun_ClinMonth <- SS$ByRun_ClinMonth %>% 
-  #   inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek"))
-  # new_rv$Mean_Alloc <- SS$Mean_Alloc %>%
-  #   inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr"))
+    # extract population predictions of the model
+    popsummary <- SaveSuiteDemographics(result) %>%
+      pivot_longer(c("Female", "Male"), names_to ="Gender", values_to = "Population")
+    
+    # extract fertility rates predictions of the model
+    fertilityrates <- GetSuiteRates(result, "femaleFertility")
+    
+    results[[scenario_name]] <- result
+    
+    #save simulation results to csv files, by scenario
+    filename_pattern <- paste(usefuldescription, scenario_name, date, sep = "_")
+    filename <- file.path(results_dir, paste0(filename_pattern, '.csv'))
+    pacehrh::SaveSuiteResults(result, filename, scenario_name, 1)
+    
+    # extract task-level simulation results
+    SR <- pacehrh::SaveExtendedSuiteResults(result)
+    # extract task-level service time allocation to cadre
+    CA <- pacehrh::SaveCadreAllocations(SR)
+    SS <- pacehrh::ComputeSummaryStats(SR, CA)
+    
+    new_rv$results <- results
+    new_rv$popsummary <- popsummary
+    new_rv$fertilityrates <- fertilityrates
+    new_rv$summarystats  <- SS
+    
+    new_rv$Mean_ServiceCat <- SS$Mean_ServiceCat %>%
+      inner_join(e$scenarios, by= c("Scenario_ID" = "UniqueID"))
+    new_rv$Mean_MonthlyTask <- SS$Mean_AnnualTask %>%
+      inner_join(e$scenarios, by=c("Scenario_ID" = "UniqueID"))
+    new_rv$Stats_TotClin <- SS$Stats_TotClin %>%
+      inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek"))
+    new_rv$Mean_ClinCat <- SS$Mean_ClinCat %>%
+      inner_join(e$scenarios, by=c("Scenario_ID"="UniqueID", "WeeksPerYr"))
+    new_rv$Mean_Total <- SS$Mean_Total %>%
+      inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek"))
+    new_rv$Stats_ClinMonth <- SS$Stats_ClinMonth %>%
+      inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek"))
+    new_rv$ByRun_ClinMonth <- SS$ByRun_ClinMonth %>%
+      inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek"))
+    new_rv$Mean_Alloc <- SS$Mean_Alloc %>%
+      inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr"))
+    
+  }, error=function(){
+    unlink(file.path(results_dir), recursive = TRUE)
+  })
   
   return(new_rv)
 }

@@ -57,6 +57,12 @@ headerServer <- function(id, store=NULL) {
   
   # Reactive value to trigger a when return to result
   switchToResultEvent <- reactiveVal(FALSE)
+  ### initialize variables used in simulation steps
+  rv <- reactiveValues(page = 1, 
+                       ### Simplfy to assume only one scenario case
+                       scenarios_input = first(read_excel(config_file, sheet = "Scenarios"))
+  )
+  
   
   moduleServer(id, function(input, output, session) {
     
@@ -78,7 +84,7 @@ headerServer <- function(id, store=NULL) {
       updateNavbarPage(session, inputId = "header_options", selected = "View Previous Results")
     })
   })
-  runSimulationServer("sim1", config_file, return_event = switchToResultEvent, store = store)
-  viewRunsServer("view_runs1", store)
+  runSimulationServer("sim1", config_file, return_event = switchToResultEvent, rv =rv, store = store)
+  viewRunsServer("view_runs1", rv = rv, store = store)
 }
 
