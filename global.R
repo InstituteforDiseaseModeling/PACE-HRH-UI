@@ -1,6 +1,8 @@
 library(desc)
 library(httr)
 library(pacehrh)
+library(readxl)
+library(tidyr)
 
 # parse DESCRIPTION file 
 desc_content <- description$new()
@@ -32,12 +34,24 @@ if (grepl("zip", content_type, fixed = TRUE)) {
   writeBin(content$content, config_file)
 } 
 
-input_file <- "config/model_inputs_user.xlsx"
+# input_file <- "config/model_inputs_user.xlsx"
+input_file <- "config/model_inputs_demo.xlsx"
 
 # Preload population options
 
 preload_pop_files <- list.files("config/population", full.names = TRUE)
 preload_pop_list <- setNames(preload_pop_files, gsub(".csv","", gsub("_", " ", basename(preload_pop_files))))
 
+# Preload Region if available
+
+region_list = "config/regions.txt"
+file.remove(region_list)
+if ("RegionSelect" %in% excel_sheets(config_file)){
+  command = paste0("cd vbscript & cscript selectRegion.vbs ../", config_file)
+  system(command ="cmd", input=command,  wait =TRUE)
+  
+}
+
+result_root <- "pace_results"
 
 # pacehrh::SetInputExcelFile(config_file)

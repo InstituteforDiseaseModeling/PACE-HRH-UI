@@ -9,7 +9,7 @@ but also require more time and larger data files. We recommend running between 1
 
 sim_pages<- c("Configuration", "Input Validation", "Run Simulation", "View Results")
 
-# Simulation steps
+# Simulation steps as hidden tabs to create step by step effect
 
 sim_tabs <- function(ns){
   tabsetPanel(
@@ -41,7 +41,7 @@ sim_tabs <- function(ns){
            ),
            fluidRow(
              column(6,
-                    textInput(ns("region"), "Region")      
+                    selectInput(ns("region"), "Region", choices = NULL),      
              ),
              column(6,
                     textInput(ns("hrh_utilization"), "Target HRH utilization")      
@@ -76,25 +76,23 @@ sim_tabs <- function(ns){
            ),
            fluidRow(column(6, offset = 3, actionButton(ns("run_simBtn"), "Run Simulations"))
            ),
+           fluidRow(column(12, uiOutput(ns("runSimMsg")))
+                    ), 
            fluidRow(
-             column(12,  HTML("<br><br><br><br><br><br><br><br><br><br>"))
+             column(12,  HTML("<br><br><br><br><br>"))
            )
   
   ),
   tabPanel(sim_pages[4], 
            fluidRow(
-             column(4, actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots"), ), 
-             column(4, offset=2, actionButton(ns("save_resultsBtn"), "Save Results for later comparison"))
+             column(4, actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots", class='menuButton'), ), 
+             # column(4, offset=2, actionButton(ns("save_resultsBtn"), "Save Results for later comparison"))
+             column(4, downloadButton(ns("download_resultsBtn"), "Download Results (.csv)", class='menuButton')), 
+             column(4, actionButton(ns("compareBtn"), "Select Previous runs to compare", class='menuButton'))
+             
            ),
            fluidRow(
-             column(12, HTML("<br><br>"))
-           ),
-           fluidRow(
-             column(4, downloadButton(ns("download_resultsBtn"), "Download Results (.csv)")), 
-             column(4, offset=2, actionButton(ns("compareBtn"), "Select Previous runs to compare"))
-           ),
-           fluidRow(
-             column(12,  HTML("<br><br><br><br><br><br><br><br><br><br>"))
+             column(12,  HTML("<br><br><br><br><br>"))
            )
   )
 )}
@@ -112,11 +110,8 @@ runSimulationUI <- function(id) {
       ),
       
       fluidRow(
-        column(12, sim_tabs(ns = ns)),
+        column(12, div(sim_tabs(ns = ns)), class='sim_row'),
       ),
-    
-      # fluidRow(column(12, HTML("<br><br>"))
-      # ),
       
       fluidRow(
         column(2, hidden(div(id = ns("prevDiv"), 
@@ -125,7 +120,7 @@ runSimulationUI <- function(id) {
         column(2, div(id = ns("nextDiv"), 
                       actionButton(ns("nextBtn"), "Next"), align="right")),
       ),
-      
+
       fluidRow(column(12, HTML("<br>"))
       ),
     
@@ -137,7 +132,7 @@ runSimulationUI <- function(id) {
     )
 }
 
-runSimulationServer <- function(id, config_file, store = NULL) {
+runSimulationServer <- function(id, config_file, return_event, store = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -155,6 +150,17 @@ runSimulationServer <- function(id, config_file, store = NULL) {
       rv$task_sheet <- rv$scenarios_input$sheet_TaskValues
       rv$task_input <- read_excel(config_file, sheet = rv$task_sheet)
       rv$pop_input = read_excel(config_file, sheet = "TotalPop")
+      
+      if(sim_pages[rv$page]=="Configuration"){
+        if(file.exists(region_list)){
+          region_names <- readLines(region_list)
+          updateSelectInput(session, "region", choices = region_names)
+        }
+        else{
+          updateSelectInput(session, "region", label = "Region (Unavailable)")
+          shinyjs::disable("region")
+        }
+      }
     })
     
     output$step_title <- renderUI({
@@ -197,10 +203,7 @@ runSimulationServer <- function(id, config_file, store = NULL) {
       
       if(sim_pages[rv$page]=="Input Validation"){
         if (!is.null(rv$pop_input)) {
-           simpleplotServer(
-            "population-tab", get_population_pyramid_plot, rv)
-            #plotting_function = "get_population_pyramid_plot",
-            #rv = rv )
+           simpleplotServer("population-tab", get_population_pyramid_plot, rv)
         }
       }
     }
@@ -208,12 +211,12 @@ runSimulationServer <- function(id, config_file, store = NULL) {
     ### handle main parameters
     save_values <- function(){
       if (rv$page==1){
-        rv$start_year = input$start_year
-        rv$end_year = input$endyear
-        rv$catchment_pop = input$catchment_pop
-        rv$hrs_wk = input$hrs_wk
-        rv$region = input$region
-        rv$hrh_utilization = input$hrh_utilization
+        rv$start_year <- input$start_year
+        rv$end_year <- input$end_year
+        rv$catchment_pop <- input$catchment_pop
+        rv$hrs_wk <- input$hrs_wk
+        rv$region <- input$region
+        rv$hrh_utilization <- input$hrh_utilization
         print(rv$start_year)
       }
     }
@@ -242,7 +245,7 @@ runSimulationServer <- function(id, config_file, store = NULL) {
             tabPanel("Population Pyramid", 
                       tagList(
                         DTOutput(ns("preview_pop")),
-                        selectInput(ns("preload_pop"), "Select Preloaded Population", choices= names(preload_pop_list)), 
+                        selectInput(ns("preload_pop"), "Select Preloaded Population", choices= c("Choose", names(preload_pop_list)), selected = ""), 
                         fileInput(ns("file_pop"), "Upload Population File", accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv"))
                       )
             ),
@@ -267,17 +270,7 @@ runSimulationServer <- function(id, config_file, store = NULL) {
       ))
       
     })
-    
-    # observeEvent(input$scenario, {
-    # 
-    #   print(input$scenario)
-    #   
-    #   rv$scenario_selected <- input$scenario
-    #   rv$seasonality_sheet <- rv$scenarios_input$sheet_SeasonalityCurves[rv$scenarios_input$UniqueID==input$scenario]
-    #   rv$seasonality_input <- read_excel(config_file, sheet = rv$seasonality_sheet)
-    #   
-    # })
-    
+  
     ### Handle sheet preview
     output$preview_pop <- renderDT({
       rv$pop_input
@@ -312,13 +305,15 @@ runSimulationServer <- function(id, config_file, store = NULL) {
     observeEvent(input$preload_pop, {
       selected_file <- input$preload_pop
       print("Getting Population File Preloaded")
-      if (!is.null(selected_file)) {
+      if (!is.null(selected_file) & selected_file != "Choose") {
         actual_filename <- preload_pop_list[names(preload_pop_list) == selected_file]
         file_content <- read.csv(actual_filename, row.names = NULL) # assuming the file is a CSV
         rv$pop_input <- file_content
       }
     })
     
+    
+    ### handle sheet change saving
     observeEvent(input$saveValue, {
      
       # Close the modal after saving
@@ -345,12 +340,14 @@ runSimulationServer <- function(id, config_file, store = NULL) {
                 
     })
     
+    # handle saving and notify when it's done
     observeEvent(input$saving, {
       if (input$saving == 'starting'){
         uid <- input$uid
         
         isolate({
           
+          # create a inputfile for the current user based on uid 
           prefix <- unlist(strsplit(config_file, "\\."))[1]
           input_file <- paste0(prefix, "_", uid, ".xlsx")
           
@@ -363,9 +360,11 @@ runSimulationServer <- function(id, config_file, store = NULL) {
           
           openxlsx::writeData(wb, "TotalPop", rv$pop_input)
           openxlsx::writeData(wb, rv$seasonality_sheet , rv$seasonality_input)
+          openxlsx::writeData(wb, rv$task_sheet , rv$task_input)
           openxlsx::saveWorkbook(wb, input_file, overwrite = TRUE)
         })
         
+        rv$input_file <- input_file
         print("Saving Complete")
         session$sendCustomMessage("done_handler", input_file)
         js_code_done <- sprintf("Shiny.setInputValue('%s', 'done');", ns('saving'))
@@ -379,19 +378,9 @@ runSimulationServer <- function(id, config_file, store = NULL) {
     observe({
       
       rv$trial_num <- ifelse(is.null(input$num_trials), 0, input$num_trials)
-      if (rv$trial_num >0 ){
-        runtime <- rv$trial_num * 10
-        expected_size <-  rv$trial_num 
-      }
-      
-      runtime <- ifelse(runtime >0 , runtime, "--:--:--")
-      expected_size <- ifelse(expected_size >0 , expected_size, "--.--")
-      
-      result_text <- sprintf("Given your number of replications, This model will take %s seconds to run, 
-                             The detail result files, if you choose to download them, will be approximately %s mb.", runtime, expected_size)
       
       output$run_estimate <- renderText({
-        result_text
+        get_estimated_run_stats(rv$trial_num)
       })
       
     })
@@ -401,7 +390,8 @@ runSimulationServer <- function(id, config_file, store = NULL) {
       showModal(
         modalDialog(
           title = "Enter Run Name",
-          textInput("runNameInput", "Run Name:", ""),
+          textInput(ns("runNameInput"), "Run Name:", ""),
+          span(textOutput(ns("errorRunName")), style="color:red"),
           footer = tagList(
             modalButton("Cancel"),
             actionButton(ns("saveNameButton"), "Save")
@@ -411,9 +401,54 @@ runSimulationServer <- function(id, config_file, store = NULL) {
     })
     
     observeEvent(input$saveNameButton, {
-      rv$run_name <- input$runNameInput
-      removeModal()
+      # Check if this name already exist
+      if (input$runNameInput %in% list.dirs(result_root, full.names = FALSE)){
+        output$errorRunName <- renderText({
+          "The test name already exists, please choose a new name!"
+        })
+      }
+      else{
+        removeModal()
+        rv$run_name <- input$runNameInput
+     
+        response <-
+          run_pacehrh_simulation(rv, input_file = input_file)
+        #map the key value pairs from the response to the reactive value
+        keys <- names(response)
+        for (key in keys) {
+          rv[[key]] <- response[[key]]
+        }
+        # save run_name to localstorage
+        js_code_save <- "
+          var new_run = {
+            name: '%s',
+            date: new Date().toLocaleString()
+          };
+          var test_names = JSON.parse(localStorage.getItem('test_names')) || [];
+          test_names.push(new_run);
+          localStorage.setItem('test_names', JSON.stringify(test_names));
+        "
+        shinyjs::runjs(sprintf(js_code_save, rv$run_name))
+        output$runSimMsg <- renderUI(
+            HTML(paste0("<div style='color:green;'>", "Simulation completed", "</div>"))
+        )
+      }
     })
-  
+    
+    ### handle result viewing
+    
+    output$download_resultsBtn <- downloadHandler(
+      filename = paste0("results_", rv$run_name, ".zip"),
+      content = function(file) 
+      {
+        folder_name <- file.path(result_root, rv$run_name)
+        zip(file, files = list.files(folder_name, full.names = TRUE))
+      })
+    
+    ### handle view results from run simulation step 4
+    observeEvent(input$compareBtn, {
+      return_event(TRUE)
+    })
+    
   })
 }

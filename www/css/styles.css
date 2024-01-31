@@ -238,3 +238,13 @@ ul.navbar-nav{
   overflow-y: auto; /* Enable vertical scrolling */
   margin-bottom: 120px;
 }
+
+.menuButton {
+  width: 90%;
+  height: 80px;
+}
+
+.sim_row {
+  height: 420px
+}
+
