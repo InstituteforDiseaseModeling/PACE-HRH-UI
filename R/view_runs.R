@@ -6,7 +6,9 @@ viewRunsUI <- function(id) {
     fluidRow(
       column(12, 
              tagList(
-                selectInput(ns("run_selector"), "Choose a Run To view", choices =NULL),
+                # selectInput(ns("run_selector"), "Choose a Run To view", choices =NULL),
+                DTOutput(ns("history_table")),
+                actionButton(ns("compare_btn"), "Show / Compare Result"),
                 downloadButton(ns("download"), "Download")
             )
       )
@@ -14,10 +16,6 @@ viewRunsUI <- function(id) {
     tabsetPanel(
       id = "main-tabs",
       # --------Insert tabs UI calls here, comma separated --------
-      plotTabUI(id = ns("population-tab"),
-                title = "Population"),
-      plotTabUI(id = ns("fertility-tab"),
-                title = "Fertility"),
       plotTabUI(id = ns("slide-4-tab"),
                 title = "By Clinical Category"),
       plotTabUI(id = ns("by-ServiceCat-tab"),
@@ -43,30 +41,29 @@ viewRunsServer <- function(id, rv, store) {
       autoInvalidate()
       js_code <- "
       var arr = [];
+      var arr_history = localStorage.getItem('test_names');
       var test_names = JSON.parse(localStorage.getItem('test_names')) || [];
       for (let i = 0; i < test_names.length; i++) {
        arr.push(test_names[i].name)
       }
       Shiny.setInputValue('%s', arr);
+      Shiny.setInputValue('%s', arr_history);
       "
-      shinyjs::runjs(sprintf(js_code, ns("test_names_loaded")))  
+      shinyjs::runjs(sprintf(js_code, ns("test_names_loaded"), ns("test_history")))  
       updateSelectInput(session, "run_selector",
                         label = "Choose a Run To view",
                         choices = input$test_names_loaded,
       )
     })
     
+    observeEvent(input$test_history, {
+      df_history <- jsonlite::fromJSON(input$test_history)
+      output$history_table <- renderDT({
+        data.frame(df_history)
+      })
+    },ignoreNULL = TRUE)
+    
     observe ({
-        plotTabServer(
-        id = "population-tab",
-        plotting_function = "get_population_plot",
-        rv = rv)
-      
-        plotTabServer(
-        id = "fertility-tab",
-        plotting_function = "get_fertility_rates_time_series_plot",
-        rv = rv)
-  
         plotTabServer(
         id = "slide-4-tab",
         plotting_function = "get_slide_4_plot",

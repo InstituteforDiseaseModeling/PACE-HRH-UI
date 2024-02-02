@@ -77,10 +77,7 @@ sim_tabs <- function(ns){
            fluidRow(column(6, offset = 3, actionButton(ns("run_simBtn"), "Run Simulations"))
            ),
            fluidRow(column(12, uiOutput(ns("runSimMsg")))
-                    ), 
-           fluidRow(
-             column(12,  HTML("<br><br><br><br><br>"))
-           )
+                    ),
   
   ),
   tabPanel(sim_pages[4], 
@@ -91,9 +88,6 @@ sim_tabs <- function(ns){
              column(4, actionButton(ns("compareBtn"), "Select Previous runs to compare", class='menuButton'))
              
            ),
-           fluidRow(
-             column(12,  HTML("<br><br><br><br><br>"))
-           )
   )
 )}
 
@@ -123,12 +117,12 @@ runSimulationUI <- function(id) {
 
       fluidRow(column(12, HTML("<br>"))
       ),
-    
       fluidRow(
         column(3, offset=9, div(id=ns("skipAll"), actionButton(ns("skipBtn"), "Skip To Run Simulation"), align="center")),
         bsTooltip(ns("skipBtn"), "Proceed directly to run simulation, Warning: Unchecked inputs may have problems.",
                   "left", options = list(container = "body"))
-      )
+      ),
+      loggerUI("logger"),
     )
 }
 
@@ -136,7 +130,28 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-   
+    # function to trigger config file saving before simulation
+    trigger_file_saving <- function(ns){
+      js_code = sprintf("
+                function set_uid(){
+                  if (localStorage.getItem('uid')) {
+                    return localStorage.getItem('uid');
+                  } 
+                  else {
+                    v = (Math.random() + 1).toString(36).substring(7);
+                    localStorage.setItem('uid', v);
+                    return v;
+                  }
+                }
+                var uid = localStorage.getItem('uid'); 
+                Shiny.setInputValue('%s', uid);
+                Shiny.setInputValue('%s', 'starting', {priority: 'event'});"
+                        , ns("uid"), ns("saving"))
+      print(gsub("\n", "", js_code))
+      shinyjs::runjs(gsub("\n", "", js_code))
+    }
+    
+    
     # Set sheet data based on input scenario
     observe({
       rv$scenario_selected <- rv$scenarios_input$UniqueID
@@ -228,6 +243,10 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
       navPage(0, sim=TRUE)
     })
     
+    observeEvent(input$region, {
+      rv$region_changed <- TRUE
+    })
+    
     ### handle optional parameters
     observeEvent(input$optional_params, {
       showModal(modalDialog(
@@ -307,33 +326,15 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
         rv$pop_input <- file_content
       }
     })
-    
+   
     
     ### handle sheet change saving
     observeEvent(input$saveValue, {
      
       # Close the modal after saving
       removeModal()
-      print(paste0("value is ", head(rv$pop_input))) # Debugging
-      
-      js_code = sprintf("
-                function set_uid(){
-                  if (localStorage.getItem('uid')) {
-                    return localStorage.getItem('uid');
-                  } 
-                  else {
-                    v = (Math.random() + 1).toString(36).substring(7);
-                    localStorage.setItem('uid', v);
-                    return v;
-                  }
-                }
-                var uid = localStorage.getItem('uid'); 
-                Shiny.setInputValue('%s', uid);
-                Shiny.setInputValue('%s', 'starting', {priority: 'event'});"
-                , ns("uid"), ns("saving"))
-      print(gsub("\n", "", js_code))
-      shinyjs::runjs(gsub("\n", "", js_code))
-                
+      # print(paste0("value is ", head(rv$pop_input))) # Debugging
+      rv$data_changed <- TRUE
     })
     
     # handle saving and notify when it's done
@@ -351,26 +352,28 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
             file.copy(config_file, input_file, overwrite = TRUE)
           }
           
-          
-          if ("RegionSelect" %in% excel_sheets(input_file)){
-            command = paste0("cd vbscript & cscript updateRegion.vbs ", rv$region, " ../", input_file)
+          if ("RegionSelect" %in% excel_sheets(input_file) & rv$region_changed ){
+            command = paste0("cd vbscript & cscript updateRegion.vbs \"", input$region, "\" ../", input_file)
             system(command ="cmd", input=command,  wait =TRUE)
             
           }
           
-          # save all changes to a new config (input_file)
-          wb <- openxlsx::loadWorkbook(input_file)
+          if (rv$data_changed){
+            # save all changes to a new config (input_file)
+            wb <- openxlsx::loadWorkbook(input_file)
+            
+            openxlsx::writeData(wb, "TotalPop", rv$pop_input)
+            openxlsx::writeData(wb, rv$seasonality_sheet , rv$seasonality_input)
+            openxlsx::writeData(wb, rv$task_sheet , rv$task_input)
+            openxlsx::saveWorkbook(wb, input_file, overwrite = TRUE)
+          }
           
-          openxlsx::writeData(wb, "TotalPop", rv$pop_input)
-          openxlsx::writeData(wb, rv$seasonality_sheet , rv$seasonality_input)
-          openxlsx::writeData(wb, rv$task_sheet , rv$task_input)
-          openxlsx::saveWorkbook(wb, input_file, overwrite = TRUE)
         })
         
         rv$input_file <- input_file
         print("Saving Complete")
         session$sendCustomMessage("done_handler", input_file)
-        js_code_done <- sprintf("Shiny.setInputValue('%s', 'done');", ns('saving'))
+        js_code_done <- sprintf("Shiny.setInputValue('%s', 'done'); Shiny.setInputValue('%s', 'TRUE');", ns('saving'), ns('sim_ready'))
         shinyjs::runjs(js_code_done)
       }
       
@@ -404,6 +407,7 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
     })
     
     observeEvent(input$saveNameButton, {
+      
       # Check if this name already exist
       if (input$runNameInput %in% list.dirs(result_root, full.names = FALSE)){
         output$errorRunName <- renderText({
@@ -412,30 +416,41 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
       }
       else{
         removeModal()
+        # Update config if anything changed
+        trigger_file_saving(ns)
         rv$run_name <- input$runNameInput
-     
-        response <-
-          run_pacehrh_simulation(rv, input_file = input_file)
-        #map the key value pairs from the response to the reactive value
-        keys <- names(response)
-        for (key in keys) {
-          rv[[key]] <- response[[key]]
-        }
-        # save run_name to localstorage
-        js_code_save <- "
+      }
+    })
+    
+    observeEvent(input$sim_ready, {
+      response <-
+        run_pacehrh_simulation(rv, input_file = input_file)
+      #map the key value pairs from the response to the reactive value
+      keys <- names(response)
+      for (key in keys) {
+        rv[[key]] <- response[[key]]
+      }
+      # save run_name to localstorage
+      
+      js_code_save <- "
           var new_run = {
             name: '%s',
-            date: new Date().toLocaleString()
+            date: new Date().toLocaleString(),
+            start_year: '%s',
+            end_year: '%s',
+            catchment_pop: '%s',
+            region: '%s'
           };
           var test_names = JSON.parse(localStorage.getItem('test_names')) || [];
           test_names.push(new_run);
           localStorage.setItem('test_names', JSON.stringify(test_names));
         "
-        shinyjs::runjs(sprintf(js_code_save, rv$run_name))
-        output$runSimMsg <- renderUI(
-            HTML(paste0("<div style='color:green;'>", "Simulation completed", "</div>"))
-        )
-      }
+      js_code_save <- sprintf(js_code_save, rv$run_name, rv$start_year, rv$end_year, rv$scenarios_input$BaselinePop, ifelse(is.null(rv$region), 'NA', rv$region))
+      print(js_code_save)
+      shinyjs::runjs(js_code_save)
+      output$runSimMsg <- renderUI(
+        HTML(paste0("<div style='color:green;'>", "Simulation completed", "</div>"))
+      )
     })
     
     ### handle result viewing

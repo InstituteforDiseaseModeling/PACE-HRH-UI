@@ -60,7 +60,9 @@ headerServer <- function(id, store=NULL) {
   ### initialize variables used in simulation steps
   rv <- reactiveValues(page = 1, 
                        ### Simplfy to assume only one scenario case
-                       scenarios_input = first(read_excel(config_file, sheet = "Scenarios"))
+                       scenarios_input = first(read_excel(config_file, sheet = "Scenarios")),
+                       data_changed = FALSE,
+                       region_changed = FALSE
   )
   
   

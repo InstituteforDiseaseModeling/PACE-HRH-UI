@@ -137,7 +137,7 @@ ul.navbar-nav{
     position: fixed;
     bottom: 45px;
     width: 100%;
-    background-color: #333333;
+    background-color: #b8631d;
     color: white;
     z-index: 2000;
     display: flex;
@@ -245,6 +245,6 @@ ul.navbar-nav{
 }
 
 .sim_row {
-  height: 420px
+  height: 410px
 }
 
