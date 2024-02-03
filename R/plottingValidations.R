@@ -2,8 +2,8 @@ library(plotly)
 #--------------------Population pyramid plot------------------
 
 get_population_pyramid_plot <- function(rv) {
-  print("plot pop now")
- 
+  print("plot population...")
+  print(head(rv$pop_input))
   data <- rv$pop_input
   # Replace "<1" with 0 and convert to numeric
   data$Age <- as.factor(gsub("<1", "0", data$Age))

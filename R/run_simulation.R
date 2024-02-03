@@ -159,7 +159,7 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
       rv$seasonality_input <- read_excel(config_file, sheet = rv$seasonality_sheet)
       rv$task_sheet <- rv$scenarios_input$sheet_TaskValues
       rv$task_input <- read_excel(config_file, sheet = rv$task_sheet)
-      rv$pop_input = read_excel(config_file, sheet = "TotalPop")
+      rv$pop_input <- read_excel(config_file, sheet = "TotalPop")
       
       if(sim_pages[rv$page]=="Configuration"){
         if(file.exists(region_list)){
@@ -213,7 +213,9 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
       
       if(sim_pages[rv$page]=="Input Validation"){
         if (!is.null(rv$pop_input)) {
-           simpleplotServer("population-tab", get_population_pyramid_plot, rv)
+          print("sending plot command:")
+          print(head(rv$pop_input))
+          simpleplotServer("population-tab", get_population_pyramid_plot, rv)
         }
       }
     }
@@ -335,6 +337,8 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
       removeModal()
       # print(paste0("value is ", head(rv$pop_input))) # Debugging
       rv$data_changed <- TRUE
+      rv$sim_triggered <- FALSE
+      trigger_file_saving(ns)
     })
     
     # handle saving and notify when it's done
@@ -372,11 +376,13 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
         
         rv$input_file <- input_file
         print("Saving Complete")
-        session$sendCustomMessage("done_handler", input_file)
-        js_code_done <- sprintf("Shiny.setInputValue('%s', 'done'); Shiny.setInputValue('%s', 'TRUE');", ns('saving'), ns('sim_ready'))
-        shinyjs::runjs(js_code_done)
+        if (rv$sim_triggered){
+          # if this file saving is triggered by the simulation step, set sim_ready to continue simulation
+          session$sendCustomMessage("done_handler", input_file)
+          js_code_done <- sprintf("Shiny.setInputValue('%s', 'done'); Shiny.setInputValue('%s', 'TRUE');", ns('saving'), ns('sim_ready'))
+          shinyjs::runjs(js_code_done)
+        }
       }
-      
     })
     
     ### handle Run simulation
@@ -416,7 +422,8 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
       }
       else{
         removeModal()
-        # Update config if anything changed
+        # Update config again if anything changed before running sim
+        rv$sim_triggered <- TRUE 
         trigger_file_saving(ns)
         rv$run_name <- input$runNameInput
       }

@@ -15,7 +15,7 @@ get_fertility_rates_time_series_plot <- function(rv) {
     theme_bw() +
     geom_boxplot() +
     theme(legend.position = "none", axis.text.x = element_text(angle=-90, vjust = .5, hjust=1)) +
-    facet_grid(Label ~ Scenario_ID)
+    facet_grid(Label ~ test_name)
   ggplotly(plot)
 }
 
@@ -34,7 +34,7 @@ get_population_plot <- function(rv) {
     mutate(totalpop = sum(Population)) %>% 
     group_by(Scenario_ID) %>% 
     mutate(startpop = round(min(totalpop),0), endpop = round(max(totalpop),0)) %>% 
-    mutate(Scenario_label = paste(Scenario_ID, 
+    mutate(Scenario_label = paste(test_name, 
                                   format(startpop, big.mark = ","),
                                   "Start Pop",
                                   format(endpop, big.mark = ","),
@@ -58,7 +58,6 @@ get_slide_4_plot <- function(rv){
   #dashed line is actual hours worked per week, according to time and motion study
   #solid line is the 95th percentile, simulated
   #bars are the simulated expected value for time required, best case with perfect scheduling
-  
   StartYear <-  rv$start_year + 1
   EndYear <-  rv$end_year 
   
@@ -70,12 +69,12 @@ get_slide_4_plot <- function(rv){
     mutate(Alpha = case_when(
       ClinicalOrNon == "Clinical" ~ 0.3,
       ClinicalOrNon != "Clinical" ~ 1)) %>%
-    mutate(Scenario_label = paste(Scenario_ID, format(BaselinePop, big.mark = ","),"Pop", sep=" "))
+    mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Pop", sep=" "))
   temp_clin$Category <- factor(temp_clin$Category,ordered=TRUE,levels=unique(temp_clin$Category))
   
   temp_total <- rv$Mean_Total %>%
     filter(Year >= StartYear & Year <= EndYear) %>% 
-    mutate(Scenario_label = paste(Scenario_ID, format(BaselinePop, big.mark = ","),"Pop", sep=" "))
+    mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Pop", sep=" "))
   
   ylabel <- "Hours per Week per Catchment Pop"
   maxyval <- max(rv$Mean_Total$CI95/rv$Mean_Total$WeeksPerYr)*1.05
@@ -105,12 +104,12 @@ byServiceCat_plot <- function(rv){
   ServiceCat_Clinical <- rv$Mean_ServiceCat %>%
     subset(ClinicalOrNon=="Clinical") %>%
     filter(Year >= StartYear & Year <= EndYear) %>% 
-    dplyr::mutate(Scenario_label = paste(Scenario_ID, format(BaselinePop, big.mark = ","),"Starting Pop", sep=" ")) %>% 
+    dplyr::mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Starting Pop", sep=" ")) %>% 
     group_by(Scenario_ID, Year) %>%
     dplyr::mutate(TotalHrs=sum(MeanHrs)) 
   temp_TotClin <- rv$Stats_TotClin %>% 
     filter(Year >= StartYear & Year <= EndYear) %>% 
-    dplyr::mutate(Scenario_label = paste(Scenario_ID, format(BaselinePop, big.mark = ","),"Starting Pop", sep=" "))
+    dplyr::mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Starting Pop", sep=" "))
   ymax <- max(temp_TotClin$CI95/temp_TotClin$WeeksPerYr)*1.05
   
   plot <- ggplot() +
@@ -153,7 +152,7 @@ byServiceTile_plot <- function(rv){
   p <- ggplot(temp_ServiceCat,aes(area=MeanHrs,fill=ServiceLabel,label=ServiceLabel,subgroup=ServiceLabel))+
     geom_treemap()+geom_treemap_text(color="black",place="center",size=16)+
     geom_treemap_subgroup_border(color="black",size=2.5)+
-    facet_wrap(~Scenario_ID) +
+    facet_wrap(~test_name) +
     theme_bw()+theme(legend.position = "none")+
     scale_fill_viridis_d()
   
@@ -187,7 +186,7 @@ serviceOverTime_plot <- function(rv){
     theme_bw() +
     scale_color_discrete()+
     geom_text(aes(x=max(Year)+.2,y=RatioLastYr,label=RatioLabel),color="darkgrey",size=3.5, hjust=0, nudge_x = 0.5) +
-    facet_wrap(~Scenario_ID) +
+    facet_wrap(~test_name) +
     scale_x_continuous(breaks = seq(StartYear,EndYear),limits=c(StartYear,max(ServiceCat_Clinical$Year)+6)) +
     scale_y_continuous(limits = c(yplotmin,yplotmax)) +
     theme(legend.title = element_blank(), legend.position="bottom",axis.text.x = element_text(angle=-90, vjust = .5, hjust=1)) +

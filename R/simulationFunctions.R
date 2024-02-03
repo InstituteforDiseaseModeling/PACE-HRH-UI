@@ -60,7 +60,7 @@ run_pacehrh_simulation <- function(rv, input_file){
     results[[scenario_name]] <- result
     
     #save simulation results to csv files, by scenario
-    filename <- file.path(results_dir, "result.csv")
+    filename <- file.path(results_dir, "results.csv")
     pacehrh::SaveSuiteResults(result, filename, scenario_name, 1)
     loggerServer("logger", paste0("Saving result: ", filename) )
     

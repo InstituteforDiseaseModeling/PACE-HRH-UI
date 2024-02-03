@@ -40,8 +40,11 @@ simpleplotUI <- function(id,title) {
 
 simpleplotServer <- function(id, plotFunction, rv) {
   moduleServer(id, function(input, output, session) {
+    print("In module:")
+    print(head(rv$pop_input))
     output$plot <- renderPlot({
-      plotFunction(rv)  # Call the function to get the ggplot object
+      do.call(plotFunction, list(rv))
+      # plotFunction(rv)  # Call the function to get the ggplot object
     })
   })
 }
