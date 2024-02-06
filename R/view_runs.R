@@ -84,7 +84,7 @@ viewRunsServer <- function(id, rv, store) {
           filter = 'top',
           selection = 'none',
           options = list(
-            pageLength = 10,
+            pageLength = 5,
             preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
             drawCallback = JS(
               'function() {',
@@ -112,7 +112,7 @@ viewRunsServer <- function(id, rv, store) {
       selections[input$rowSelected$index + 1] <- input$rowSelected$selected
       selectedRows(selections)
       
-      if (sum(selections) > 2) {
+      if (sum(selections) > 4) {
         selections[input$rowSelected$index + 1] <- FALSE
         selectedRows(selections)
         session$sendCustomMessage(type = "uncheckCheckbox", input$rowSelected$index)
@@ -133,6 +133,10 @@ viewRunsServer <- function(id, rv, store) {
         rv_results$start_year <- as.integer(unique(rv$df_history[selected, 'start_year']))
         rv_results$end_year <- as.integer(unique(rv$df_history[selected, 'end_year']))
       }
+      else{
+        data_is_valid <- FALSE
+        session$sendCustomMessage("notify_handler", "Unable to compare different start /end year results!")
+      }
 
       if(all(file.exists(file.path(result_root, rv$df_history[selected, 'name'])))){
         filenames <- unique(list.files(file.path(result_root, rv$df_history[selected, 'name']), pattern = "\\.csv$"))
@@ -151,7 +155,7 @@ viewRunsServer <- function(id, rv, store) {
           name <- tools::file_path_sans_ext(filename)
           rv_results[[name]] <- combined_data
         }
-        redraw(data_is_valid )
+        redraw(data_is_valid)
       }
     
     })

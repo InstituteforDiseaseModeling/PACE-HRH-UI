@@ -45,7 +45,10 @@ run_pacehrh_simulation <- function(rv, input_file){
     results <- list()
     scenario_name <- e$scenarios$UniqueID[1]
     
-    loggerServer("logger", paste0("Running scenario > ", scenario_name) )
+    loggerServer("logger", paste0("Running scenario > ", scenario_name))
+    loggerServer("logger", paste0(" Catchment Pop > ",e$scenarios$BaselinePop))
+    loggerServer("logger", paste0(" Hrs Per Week > ",e$scenarios$HrsPerWeek))
+    loggerServer("logger", paste0(" Max Utilization > ",e$scenarios$MaxUtilization))
     
     result <- pacehrh::RunExperiments(scenarioName = scenario_name,
                                       trials = rv$trial_num,

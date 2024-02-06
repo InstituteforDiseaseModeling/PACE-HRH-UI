@@ -53,20 +53,51 @@ headerUI <- function(id) {
 }
 
 headerServer <- function(id, store=NULL) {
+
   aboutServer("about-page")
   
   # Reactive value to trigger a when return to result
   switchToResultEvent <- reactiveVal(FALSE)
+  
   ### initialize variables used in simulation steps
   rv <- reactiveValues(page = 1, 
-                       ### Simplfy to assume only one scenario case
-                       scenarios_input = first(read_excel(config_file, sheet = "Scenarios")),
-                       data_changed = FALSE,
-                       region_changed = FALSE
+                       region_changed = FALSE,
+                       input_file = config_file
   )
-  
-  
+ 
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+    
+    # set uid to reactiveValues
+    js_code = sprintf("
+                function set_uid(){
+                  if (localStorage.getItem('uid')) {
+                    return localStorage.getItem('uid');
+                  } 
+                  else {
+                    v = (Math.random() + 1).toString(36).substring(7);
+                    localStorage.setItem('uid', v);
+                    return v;
+                  }
+                }
+                var uid = set_uid(); 
+                Shiny.setInputValue('%s', uid);", ns("uid"))
+    print(gsub("\n", "", js_code))
+    shinyjs::runjs(gsub("\n", "", js_code))
+    
+    observeEvent(input$uid, {
+      # create a inputfile for the current user based on uid 
+      prefix <- unlist(strsplit(config_file, "\\."))[1]
+      rv$input_file <- paste0(prefix, "_", input$uid, ".xlsx")
+      rv$uid <- input$uid
+      
+      if (!file.exists(rv$input_file)){
+        file.copy(config_file, rv$input_file, overwrite = TRUE)
+      }
+      ### Simplfy to assume only one scenario case
+      rv$scenarios_sheet <- "Scenarios"
+      rv$scenarios_input <- first(read_excel(rv$input_file, sheet = "Scenarios"))
+    })
     
     # Observe the event and switch to result
     observeEvent(switchToResultEvent(), {
@@ -79,14 +110,15 @@ headerServer <- function(id, store=NULL) {
     # navbarPage functions
     observeEvent(input$run_simulation, {
       updateNavbarPage(session, inputId = "header_options", selected = "Run Simulation" )
-      # print(input$store$unique_uid)
+      # set up user config file 
+      
     })
     
     observeEvent(input$view_runs, {
       updateNavbarPage(session, inputId = "header_options", selected = "View Previous Results")
     })
   })
-  runSimulationServer("sim1", config_file, return_event = switchToResultEvent, rv =rv, store = store)
+  runSimulationServer("sim1", return_event = switchToResultEvent, rv =rv, store = store)
   viewRunsServer("view_runs1", rv = rv, store = store)
 }
 

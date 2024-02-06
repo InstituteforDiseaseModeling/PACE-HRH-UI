@@ -44,7 +44,7 @@ sim_tabs <- function(ns){
                     selectInput(ns("region"), "Region", choices = NULL),      
              ),
              column(6,
-                    textInput(ns("hrh_utilization"), "Target HRH utilization")      
+                    numericInput(ns("hrh_utilization"), "Target HRH utilization", 1, min=0, max =1)      
              )
            ),
            fluidRow(
@@ -126,27 +126,14 @@ runSimulationUI <- function(id) {
     )
 }
 
-runSimulationServer <- function(id, config_file, return_event, rv, store = NULL) {
+runSimulationServer <- function(id, return_event, rv, store = NULL) {
+  
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
     # function to trigger config file saving before simulation
     trigger_file_saving <- function(ns){
-      js_code = sprintf("
-                function set_uid(){
-                  if (localStorage.getItem('uid')) {
-                    return localStorage.getItem('uid');
-                  } 
-                  else {
-                    v = (Math.random() + 1).toString(36).substring(7);
-                    localStorage.setItem('uid', v);
-                    return v;
-                  }
-                }
-                var uid = localStorage.getItem('uid'); 
-                Shiny.setInputValue('%s', uid);
-                Shiny.setInputValue('%s', 'starting', {priority: 'event'});"
-                        , ns("uid"), ns("saving"))
+      js_code = sprintf("Shiny.setInputValue('%s', 'starting', {priority: 'event'});" ,ns("saving"))
       print(gsub("\n", "", js_code))
       shinyjs::runjs(gsub("\n", "", js_code))
     }
@@ -156,10 +143,10 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
     observe({
       rv$scenario_selected <- rv$scenarios_input$UniqueID
       rv$seasonality_sheet <- rv$scenarios_input$sheet_SeasonalityCurves
-      rv$seasonality_input <- read_excel(config_file, sheet = rv$seasonality_sheet)
+      rv$seasonality_input <- read_excel(rv$input_file, sheet = rv$seasonality_sheet)
       rv$task_sheet <- rv$scenarios_input$sheet_TaskValues
-      rv$task_input <- read_excel(config_file, sheet = rv$task_sheet)
-      rv$pop_input <- read_excel(config_file, sheet = "TotalPop")
+      rv$task_input <- read_excel(rv$input_file, sheet = rv$task_sheet)
+      rv$pop_input <- read_excel(rv$input_file, sheet = "TotalPop")
       
       if(sim_pages[rv$page]=="Configuration"){
         if(file.exists(region_list)){
@@ -336,7 +323,6 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
       # Close the modal after saving
       removeModal()
       # print(paste0("value is ", head(rv$pop_input))) # Debugging
-      rv$data_changed <- TRUE
       rv$sim_triggered <- FALSE
       trigger_file_saving(ns)
     })
@@ -344,42 +330,40 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
     # handle saving and notify when it's done
     observeEvent(input$saving, {
       if (input$saving == 'starting'){
-        uid <- input$uid
-        
+        uid <- rv$uid
         isolate({
           
-          # create a inputfile for the current user based on uid 
-          prefix <- unlist(strsplit(config_file, "\\."))[1]
-          input_file <- paste0(prefix, "_", uid, ".xlsx")
-          
-          if  (!file.exists(input_file)){
-            file.copy(config_file, input_file, overwrite = TRUE)
-          }
-          
-          if ("RegionSelect" %in% excel_sheets(input_file) & rv$region_changed ){
-            command = paste0("cd vbscript & cscript updateRegion.vbs \"", input$region, "\" ../", input_file)
+          if ("RegionSelect" %in% excel_sheets(rv$input_file) & rv$region_changed ){
+            command = paste0("cd vbscript & cscript updateRegion.vbs \"", input$region, "\" ../", rv$input_file)
             system(command ="cmd", input=command,  wait =TRUE)
             
           }
+        
+          # save all changes 
+          wb <- openxlsx::loadWorkbook(rv$input_file)
           
-          if (rv$data_changed){
-            # save all changes to a new config (input_file)
-            wb <- openxlsx::loadWorkbook(input_file)
-            
-            openxlsx::writeData(wb, "TotalPop", rv$pop_input)
-            openxlsx::writeData(wb, rv$seasonality_sheet , rv$seasonality_input)
-            openxlsx::writeData(wb, rv$task_sheet , rv$task_input)
-            openxlsx::saveWorkbook(wb, input_file, overwrite = TRUE)
-          }
+          # save scenario sheet
+          scenario_sheet <- read.xlsx(rv$input_file, sheet = rv$scenarios_sheet)
+          scenario_sheet$HrsPerWeek[1] <- rv$scenarios_input$HrsPerWeek
+          scenario_sheet$MaxUtilization[1] <- rv$scenarios_input$MaxUtilization
+          scenario_sheet$BaselinePop[1] <- rv$scenarios_input$BaselinePop
+          scenario_sheet <- scenario_sheet[1, , drop = FALSE]
           
+          openxlsx::writeData(wb, rv$scenarios_sheet, scenario_sheet)
+          
+          # save optional data changes  
+          openxlsx::writeData(wb, "TotalPop", rv$pop_input)
+          openxlsx::writeData(wb, rv$seasonality_sheet , rv$seasonality_input)
+          openxlsx::writeData(wb, rv$task_sheet , rv$task_input)
+          openxlsx::saveWorkbook(wb, rv$input_file, overwrite = TRUE)
         })
         
-        rv$input_file <- input_file
+        
         print("Saving Complete")
         if (rv$sim_triggered){
           # if this file saving is triggered by the simulation step, set sim_ready to continue simulation
-          session$sendCustomMessage("done_handler", input_file)
-          js_code_done <- sprintf("Shiny.setInputValue('%s', 'done'); Shiny.setInputValue('%s', 'TRUE');", ns('saving'), ns('sim_ready'))
+          session$sendCustomMessage("notify_handler", paste0("user config is sved to:", rv$input_file))
+          js_code_done <- sprintf("Shiny.setInputValue('%s', 'done'); Shiny.setInputValue('%s', 'TRUE', {priority: 'event'});", ns('saving'), ns('sim_ready'))
           shinyjs::runjs(js_code_done)
         }
       }
@@ -431,7 +415,7 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
     
     observeEvent(input$sim_ready, {
       response <-
-        run_pacehrh_simulation(rv, input_file = input_file)
+        run_pacehrh_simulation(rv, input_file = rv$input_file)
       #map the key value pairs from the response to the reactive value
       keys <- names(response)
       for (key in keys) {
@@ -446,13 +430,23 @@ runSimulationServer <- function(id, config_file, return_event, rv, store = NULL)
             start_year: '%s',
             end_year: '%s',
             catchment_pop: '%s',
+            hrs_per_wk: '%s',
+            max_utilization: '%s',
             region: '%s'
           };
           var test_names = JSON.parse(localStorage.getItem('test_names')) || [];
           test_names.push(new_run);
           localStorage.setItem('test_names', JSON.stringify(test_names));
         "
-      js_code_save <- sprintf(js_code_save, rv$run_name, rv$start_year, rv$end_year, rv$scenarios_input$BaselinePop, ifelse(is.null(rv$region), 'NA', rv$region))
+      js_code_save <- sprintf(js_code_save, 
+                              rv$run_name, 
+                              rv$start_year, 
+                              rv$end_year, 
+                              rv$scenarios_input$BaselinePop, 
+                              rv$scenarios_input$HrsPerWeek,
+                              rv$scenarios_input$MaxUtilization,
+                              ifelse(is.null(rv$region), 'NA', rv$region)
+                              )
       print(js_code_save)
       shinyjs::runjs(js_code_save)
       output$runSimMsg <- renderUI(

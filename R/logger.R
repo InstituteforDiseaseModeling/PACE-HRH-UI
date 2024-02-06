@@ -10,11 +10,11 @@ loggerUI <- function(id){
     div(
       class = "log-content",
       div(class = "log-header",
-          tags$div( style="padding:5px;",
+          tags$div( style="padding:10px;",
                     tags$h6("● ● ●", style = "margin:0!important; float: right; display: inline;"),
-                    tags$h5("Logs", style = "margin:0!important;")
+                    tags$h5("Simulation Logs", style = "margin:0!important;")
           )),
-      tags$div(style = "padding-right:5px;",shinyBS::bsAlert("log-display"))
+      tags$div(style = "padding-right:10px;",shinyBS::bsAlert("log-display"))
       
     ),
   ))
@@ -35,5 +35,4 @@ loggerServer <- function(id, message=NULL, three_dots = FALSE){
     append = FALSE,
     dismiss = FALSE
   )
-  
 }
