@@ -10,7 +10,7 @@ loggerUI <- function(id){
     div(
       class = "log-content",
       div(class = "log-header",
-          tags$div( style="padding:10px;",
+          tags$div( style="padding:10px;padding-right:20px;",
                     tags$h6("● ● ●", style = "margin:0!important; float: right; display: inline;"),
                     tags$h5("Simulation Logs", style = "margin:0!important;")
           )),

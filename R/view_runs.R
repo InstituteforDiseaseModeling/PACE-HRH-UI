@@ -22,6 +22,9 @@ viewRunsUI <- function(id) {
             )
       )
     ),
+    fluidRow(
+      div(id = ns("search_msg"), "Searching for results, this may take awhile...", div(class = "spinner"), style = "display: none;"),
+    ),
     tabsetPanel(
       id = "main-tabs",
       # --------Insert tabs UI calls here, comma separated --------
@@ -112,6 +115,7 @@ viewRunsServer <- function(id, rv, store) {
       selections[input$rowSelected$index + 1] <- input$rowSelected$selected
       selectedRows(selections)
       
+      # only allow up to 4 comparison
       if (sum(selections) > 4) {
         selections[input$rowSelected$index + 1] <- FALSE
         selectedRows(selections)
@@ -121,7 +125,7 @@ viewRunsServer <- function(id, rv, store) {
     
     
     observeEvent(input$compare_btn, {
-      
+      shinyjs::show(id=ns("search_msg"), asis = TRUE)
       selected <- which(selectedRows())
       print(paste0("selected ", length(selected)))
       test_selected <- rv$df_history[selected, 'name']
@@ -156,8 +160,10 @@ viewRunsServer <- function(id, rv, store) {
           rv_results[[name]] <- combined_data
         }
         redraw(data_is_valid)
+      } else{
+        session$sendCustomMessage("notify_handler", paste0("results not ready for ", rv$df_history[selected, 'name']))
       }
-    
+      shinyjs::hide(id=ns("search_msg"), asis = TRUE)
     })
     
     observe ({

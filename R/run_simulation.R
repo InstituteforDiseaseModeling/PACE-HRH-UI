@@ -44,7 +44,19 @@ sim_tabs <- function(ns){
                     selectInput(ns("region"), "Region", choices = NULL),      
              ),
              column(6,
-                    numericInput(ns("hrh_utilization"), "Target HRH utilization", 1, min=0, max =1)      
+                    # shinyWidgets::autonumericInput(
+                    #   inputId = ns("hrh_utilization"), 
+                    #   label = "Target HRH utilization", 
+                    #   value = 1.0, 
+                    #   minimumValue = 0.0,
+                    #   maximumValue = 1.0,
+                    #   decimalPlaces = 2,
+                    #   digitGroupSeparator = ",",
+                    #   decimalCharacter = ".",
+                    #   align = "left",
+                    #   modifyValueOnWheel = TRUE
+                    # ),
+                    numericInput(ns("hrh_utilization"), "Target HRH utilization", 1.0, min=0, max =1, step = 0.01,)      
              )
            ),
            fluidRow(
@@ -82,10 +94,13 @@ sim_tabs <- function(ns){
   ),
   tabPanel(sim_pages[4], 
            fluidRow(
-             column(4, actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots", class='menuButton'), ), 
+             column(12,  HTML("<br><br>"))
+           ),
+           fluidRow(
+             column(4, actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots")), 
              # column(4, offset=2, actionButton(ns("save_resultsBtn"), "Save Results for later comparison"))
-             column(4, downloadButton(ns("download_resultsBtn"), "Download Results (.csv)", class='menuButton')), 
-             column(4, actionButton(ns("compareBtn"), "Select Previous runs to compare", class='menuButton'))
+             column(4, downloadButton(ns("download_resultsBtn"), "Download Results (.csv)", )), 
+             column(4, actionButton(ns("compareBtn"), "Select Previous runs to compare"))
              
            ),
   )
@@ -147,6 +162,9 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       rv$task_sheet <- rv$scenarios_input$sheet_TaskValues
       rv$task_input <- read_excel(rv$input_file, sheet = rv$task_sheet)
       rv$pop_input <- read_excel(rv$input_file, sheet = "TotalPop")
+      
+      # reformat hrh utilization
+      updateNumericInput(session, "hrh_utilization", value= sprintf("%.2f", input$hrh_utilization))
       
       if(sim_pages[rv$page]=="Configuration"){
         if(file.exists(region_list)){
@@ -340,6 +358,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           }
         
           # save all changes 
+          loggerServer("logger", paste0("Saving User param > ", rv$input_file))
           wb <- openxlsx::loadWorkbook(rv$input_file)
           
           # save scenario sheet
