@@ -27,12 +27,12 @@ get_population_plot <- function(rv) {
   EndYear <-  rv$end_year 
   
   pop_sim <- rv$popsummary %>%
-    group_by(Scenario_ID, Year, Gender, Age) %>%
+    group_by(test_name, Year, Gender, Age) %>%
     dplyr::summarize(Population=mean(Population)) %>% 
     filter(Year == StartYear | Year == EndYear) %>% 
-    group_by(Scenario_ID, Year) %>% 
+    group_by(test_name, Year) %>% 
     mutate(totalpop = sum(Population)) %>% 
-    group_by(Scenario_ID) %>% 
+    group_by(test_name) %>% 
     mutate(startpop = round(min(totalpop),0), endpop = round(max(totalpop),0)) %>% 
     mutate(Scenario_label = paste(test_name, 
                                   format(startpop, big.mark = ","),
@@ -105,7 +105,7 @@ byServiceCat_plot <- function(rv){
     subset(ClinicalOrNon=="Clinical") %>%
     filter(Year >= StartYear & Year <= EndYear) %>% 
     dplyr::mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Starting Pop", sep=" ")) %>% 
-    group_by(Scenario_ID, Year) %>%
+    group_by(test_name, Year) %>%
     dplyr::mutate(TotalHrs=sum(MeanHrs)) 
   temp_TotClin <- rv$Stats_TotClin %>% 
     filter(Year >= StartYear & Year <= EndYear) %>% 
@@ -169,7 +169,7 @@ serviceOverTime_plot <- function(rv){
   ServiceCat_Clinical <- rv$Mean_ServiceCat %>%
     subset(ClinicalOrNon=="Clinical" & ServiceCat!="HIV") %>%
     filter(Year >= StartYear & Year <= EndYear) %>% 
-    group_by(Scenario_ID, ServiceCat) %>% 
+    group_by(test_name, ServiceCat) %>% 
     dplyr::mutate(MeanHrs_Start = dplyr::first(MeanHrs), RatioTo1 = MeanHrs/MeanHrs_Start) %>% 
     dplyr::mutate(RatioLastYr = case_when(
       Year == max(Year) ~ RatioTo1)) %>% 
@@ -199,23 +199,23 @@ serviceOverTime_plot <- function(rv){
 
 # -----------------seasonality plot---------------------
 seasonality_plot <- function(rv){
-
+ 
   StartYear <-  rv$start_year + 1
   EndYear <-  rv$end_year  
   
   Monthly_NonClinical <- rv$Mean_ClinCat %>% 
     subset(ClinicalOrNon != "Clinical") %>% 
-    group_by(Scenario_ID, Year) %>% 
+    group_by(test_name, Year) %>% 
     dplyr::summarize(NonClinical_Monthly = sum(MeanHrs)/12)
   
   RatioToAvg_ByMonth <- rv$ByRun_ClinMonth %>% 
     subset(Year == EndYear) %>% 
-    left_join(Monthly_NonClinical, by = c("Scenario_ID", "Year"))  %>% 
+    left_join(Monthly_NonClinical, by = c("test_name", "Year"))  %>% 
     dplyr::mutate(NonClinical_Monthly = replace_na(NonClinical_Monthly,0)) %>% 
-    group_by(Scenario_ID, Trial_num, Year) %>% 
+    group_by(test_name, Trial_num, Year) %>% 
     dplyr::mutate(MeanMonthHrs = (mean(TotHrs)+NonClinical_Monthly), RatioToMean = (TotHrs+NonClinical_Monthly)/(MeanMonthHrs)) %>% 
     ungroup() %>% 
-    group_by(Scenario_ID, Month) %>% 
+    group_by(test_name, Month) %>% 
     dplyr::summarize(RatioToMean_p05 = quantile(RatioToMean, 0.05),
                      RatioToMean_p25 = quantile(RatioToMean, 0.25),
                      RatioToMean_p50 = quantile(RatioToMean, 0.50),
@@ -231,7 +231,7 @@ seasonality_plot <- function(rv){
     scale_color_manual("#80B1D3")+
     ylim(0.85, 1.15) +
     scale_x_continuous(breaks =  seq(1, 12))+
-    facet_wrap(~Scenario_ID)+
+    facet_wrap(~test_name)+
     labs(x = "Month", y="Ratio of workload for the month to annual average")
   
   ggplotly(plot)

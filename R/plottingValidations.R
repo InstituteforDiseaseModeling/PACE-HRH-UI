@@ -1,7 +1,7 @@
 library(plotly)
 #--------------------Population pyramid plot------------------
 
-get_population_pyramid_plot <- function(rv) {
+get_population_pyramid_plot_old <- function(rv) {
   print("plot population...")
   print(head(rv$pop_input))
   data <- rv$pop_input
