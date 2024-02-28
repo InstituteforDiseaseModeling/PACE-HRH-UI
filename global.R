@@ -26,8 +26,8 @@ if (!requireNamespace("pacehrh", quietly = TRUE)) {
 }
 
 # download sample config
-config_file <- "config/model_inputs_demo.xlsx"
-if (!file.exists(config_file)){
+global_config_file <- "config/model_inputs_demo.xlsx"
+if (!file.exists(global_config_file)){
   print("download sample config...")
   config_url <- "https://raw.githubusercontent.com/InstituteforDiseaseModeling/PACE-HRH/main/config/model_inputs.xlsx"
   content <- GET(config_url)
@@ -37,12 +37,12 @@ if (!file.exists(config_file)){
   # Decide how to save based on content type
   if (grepl("zip", content_type, fixed = TRUE)) {
     # unzip to xlsx
-    writeBin(content$content, paste0(config_file, ".zip"))
-    print(paste0("downloaded to ", paste0(config_file, ".zip")))
-    unzip(paste0(config_file, ".zip"), exdir = "config")
+    writeBin(content$content, paste0(global_config_file, ".zip"))
+    print(paste0("downloaded to ", paste0(global_config_file, ".zip")))
+    unzip(paste0(global_config_file, ".zip"), exdir = "config")
     # unzip this file to get the Excel document
   } else {
-    writeBin(content$content, config_file)
+    writeBin(content$content, global_config_file)
   }
 }
 
@@ -58,12 +58,6 @@ if (file.exists(region_list)){
   file.remove(region_list)
 }
 
-if ("RegionSelect" %in% excel_sheets(config_file)){
-  command = paste0("cd vbscript & cscript selectRegion.vbs ../", config_file)
-  system(command ="cmd", input=command,  wait =TRUE)
-  
-}
-
 result_root <- "pace_results"
+show_log <- FALSE
 
-# pacehrh::SetInputExcelFile(config_file)

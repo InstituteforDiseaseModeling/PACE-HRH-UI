@@ -56,7 +56,7 @@ sim_tabs <- function(ns){
                     #   align = "left",
                     #   modifyValueOnWheel = TRUE
                     # ),
-                    numericInput(ns("hrh_utilization"), "Target HRH utilization", 1.0, min=0, max =1, step = 0.01,)      
+                    numericInput(ns("hrh_utilization"), "Target HRH utilization", value=1.0, min=0, max =1, step = 0.01,)      
              )
            ),
            fluidRow(
@@ -77,7 +77,7 @@ sim_tabs <- function(ns){
   tabPanel(sim_pages[3], 
            fluidRow(column(12, h5(num_replication_str))
            ),
-           fluidRow(column(6, offset= 3,  numericInput(ns("num_trials"), "Number of Replications:", 100))
+           fluidRow(column(6, offset= 3,  numericInput(ns("num_trials"), "Number of Replications:", 100, min=2, max=100000))
            ),
            fluidRow(
              column(12,  HTML("<br><br>"))
@@ -90,6 +90,14 @@ sim_tabs <- function(ns){
            ),
            fluidRow(column(12, uiOutput(ns("runSimMsg")))
                     ),
+           fluidRow(
+             column(12,  HTML("<br><br>"))
+           ),
+           fluidRow(column(12, 
+                           hidden(div(id="sim_logger_area",loggerUI("logger"))),
+                           hidden(actionButton(ns("close_sim_log"), "Close Log Window", width = "200px", style = "display: block; margin: 0 auto; position: relative; bottom: 30px;")))
+                    ),
+           
   
   ),
   tabPanel(sim_pages[4], 
@@ -137,7 +145,6 @@ runSimulationUI <- function(id) {
         bsTooltip(ns("skipBtn"), "Proceed directly to run simulation, Warning: Unchecked inputs may have problems.",
                   "left", options = list(container = "body"))
       ),
-      loggerUI("logger"),
     )
 }
 
@@ -145,6 +152,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
   
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    rv$sim_finished <- FALSE
     
     # function to trigger config file saving before simulation
     trigger_file_saving <- function(ns){
@@ -152,7 +160,6 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       print(gsub("\n", "", js_code))
       shinyjs::runjs(gsub("\n", "", js_code))
     }
-    
     
     # Set sheet data based on input scenario
     observe({
@@ -162,22 +169,82 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       rv$task_sheet <- rv$scenarios_input$sheet_TaskValues
       rv$task_input <- read_excel(rv$input_file, sheet = rv$task_sheet)
       rv$pop_input <- read_excel(rv$input_file, sheet = "TotalPop")
+      rv$pop_values <- read_excel(rv$input_file, sheet = rv$scenarios_input$sheet_PopValues)
       
       # reformat hrh utilization
-      updateNumericInput(session, "hrh_utilization", value= sprintf("%.2f", input$hrh_utilization))
-      
+      formatted_value <- sprintf("%.2f", input$hrh_utilization)
+      isolate(updateNumericInput(session, 
+                                 "hrh_utilization", 
+                                 value= sprintf("%.2f", input$hrh_utilization)
+                                 )
+              )
       if(sim_pages[rv$page]=="Configuration"){
         if(file.exists(region_list)){
           region_names <- readLines(region_list)
-          updateSelectInput(session, "region", choices = region_names)
+          # findout what is the selection in the workbook
+          isolate({
+            command = paste0("cd vbscript & cscript getCurrentRegion.vbs",  " ../", rv$input_file)
+            system(command ="cmd", input=command,  intern=TRUE, wait =TRUE)
+            
+          })
+          
+          
+          isolate(updateSelectInput(session, "region", choices = region_names, selected = region_names[1]))
+          rv$current_region <-  region_names[1]
         }
         else{
-          updateSelectInput(session, "region", label = "Region (Unavailable)")
+          isolate(updateSelectInput(session, "region", label = "Region (Unavailable)"))
           shinyjs::disable("region")
         }
       }
     })
     
+    
+    # Reload optional data when region changes
+    observeEvent(input$region, {
+      if (!is.null(input$region) &&  input$region != "" &&  input$region!=rv$current_region){
+        # show warning
+        showModal(
+          modalDialog(
+            title = "Confirmation Needed",
+            "Are you sure you want to proceed? Change to new region will reset your data from the original template, 
+            the data that you previously changed will be lost!",
+            footer = tagList(
+              actionButton(ns("proceedRegionBtn"), "Proceed"),
+              actionButton(ns("cancelRegionBtn"), "Cancel")
+            )
+          )
+        )
+      }
+    })
+    
+    observeEvent(input$proceedRegionBtn, {
+      removeModal()
+      reload_config(rv$uid)
+      rv$scenarios_sheet <- "Scenarios"
+      rv$scenarios_input <- first(read_excel(rv$input_file, sheet = "Scenarios"))
+      rv$current_region <- input$region
+      if ("RegionSelect" %in% excel_sheets(rv$input_file)){
+        # call vbs script to change config
+        # session$sendCustomMessage("notify_handler", paste0("region changes may reset your optional data"))
+        isolate({
+          command = paste0("cd vbscript & cscript updateRegion.vbs \"", input$region, "\" ../", rv$input_file)
+          system(command ="cmd", input=command,  wait =TRUE)
+        })
+      }
+      # reload optional data
+      rv$task_input <- read_excel(rv$input_file, sheet = rv$task_sheet)
+      rv$seasonality_input <- read_excel(rv$input_file, sheet = rv$seasonality_sheet)
+      rv$pop_input <- read_excel(rv$input_file, sheet = "TotalPop")
+    })
+    
+    observeEvent(input$cancelRegionBtn, {
+      removeModal()
+      if (!is.null(rv$current_region)){
+        isolate(updateSelectInput(session, "region", selected=rv$current_region))
+      }
+    })
+  
     output$step_title <- renderUI({
       HTML(paste0("<h2>", sim_pages[rv$page], "</h2>"))
     })
@@ -195,6 +262,10 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       }
       if(rv$page >= which(sim_pages == "Run Simulation")){
         hide("skipAll")
+        if (rv$sim_finished){
+          # only allow one sim per run
+          hide("prevDiv")
+        }
       }
     })
 
@@ -221,6 +292,8 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           print("sending plot command:")
           print(head(rv$pop_input))
           simpleplotServer("population-tab", get_population_pyramid_plot, rv)
+          simpleplotServer("fertility-tab", get_fertility_rates_plot, rv)
+          simpleplotServer("mortality-tab", get_mortality_rates_plot, rv)
         }
       }
     }
@@ -250,12 +323,13 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       navPage(0, sim=TRUE)
     })
     
-    observeEvent(input$region, {
-      rv$region_changed <- TRUE
-    })
-    
     ### handle optional parameters
     observeEvent(input$optional_params, {
+      # save current values
+      rv$pop_input_curent <- data.frame(rv$pop_input)
+      rv$seasonality_input_current <- data.frame(rv$seasonality_input)
+      rv$task_input_current <- data.frame(rv$task_input)
+      
       showModal(modalDialog(
         title = "Modify Optional Sheet Values",
         # size = "l",  # large size,
@@ -286,7 +360,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           )
         ),
         footer = tagList(
-          modalButton("Cancel"),
+          actionButton(ns("cancelDataChange"), "Cancel"),
           actionButton(ns("saveValue"), "Save")
         )
       ))
@@ -337,7 +411,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
     
     ### handle sheet change saving
     observeEvent(input$saveValue, {
-     
+  
       # Close the modal after saving
       removeModal()
       # print(paste0("value is ", head(rv$pop_input))) # Debugging
@@ -345,21 +419,33 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       trigger_file_saving(ns)
     })
     
+    # handle cancel change, revert to previous state
+    observeEvent(input$cancelDataChange, {
+      # Close the modal after cancelling
+      removeModal()
+      if (!is.null(rv$pop_input_curent)){
+        rv$pop_input <- data.frame(rv$pop_input_curent)
+        
+      }
+      if (!is.null(rv$pop_input_curent)){
+        rv$pop_input <- data.frame(rv$pop_input_curent)
+        
+      }
+      if (!is.null(rv$pop_input_curent)){
+        rv$pop_input <- data.frame(rv$pop_input_curent)
+      }
+    })
+    
     # handle saving and notify when it's done
     observeEvent(input$saving, {
       if (input$saving == 'starting'){
         uid <- rv$uid
         isolate({
-          
-          if ("RegionSelect" %in% excel_sheets(rv$input_file) & rv$region_changed ){
-            command = paste0("cd vbscript & cscript updateRegion.vbs \"", input$region, "\" ../", rv$input_file)
-            system(command ="cmd", input=command,  wait =TRUE)
-            
-          }
-        
+          if (is.null(rv$sim_triggered) || rv$sim_triggered == FALSE) session$sendCustomMessage("notify_handler", paste0("saving user config:", rv$input_file, " This may take awhile..."))
           # save all changes 
-          loggerServer("logger", paste0("Saving User param > ", rv$input_file))
+          if (!is.null(rv$sim_triggered) && rv$sim_triggered == TRUE) loggerServer("logger", paste0("Saving User param > ", rv$input_file))
           wb <- openxlsx::loadWorkbook(rv$input_file)
+          if (!is.null(rv$sim_triggered) && rv$sim_triggered == TRUE) loggerServer("logger", paste0(rv$input_file, " saved"))
           
           # save scenario sheet
           scenario_sheet <- read.xlsx(rv$input_file, sheet = rv$scenarios_sheet)
@@ -368,6 +454,8 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           scenario_sheet$BaselinePop[1] <- rv$scenarios_input$BaselinePop
           scenario_sheet <- scenario_sheet[1, , drop = FALSE]
           
+          if (!is.null(rv$sim_triggered) && rv$sim_triggered == TRUE) loggerServer("logger", paste0("Prepare config file for simulation"))
+        
           openxlsx::writeData(wb, rv$scenarios_sheet, scenario_sheet)
           
           # save optional data changes  
@@ -381,8 +469,8 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         print("Saving Complete")
         if (rv$sim_triggered){
           # if this file saving is triggered by the simulation step, set sim_ready to continue simulation
-          session$sendCustomMessage("notify_handler", paste0("user config is sved to:", rv$input_file))
-          js_code_done <- sprintf("Shiny.setInputValue('%s', 'done'); Shiny.setInputValue('%s', 'TRUE', {priority: 'event'});", ns('saving'), ns('sim_ready'))
+          # session$sendCustomMessage("notify_handler", paste0("user config is saved to:", rv$input_file))
+          js_code_done <- sprintf("Shiny.setInputValue('%s', 'done'); Shiny.setInputValue('%s', 'TRUE');", ns('saving'), ns('sim_ready'))
           shinyjs::runjs(js_code_done)
         }
       }
@@ -426,23 +514,26 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       else{
         removeModal()
         # Update config again if anything changed before running sim
+        shinyjs::show(id="sim_logger_area", asis=TRUE)
         rv$sim_triggered <- TRUE 
         trigger_file_saving(ns)
         rv$run_name <- input$runNameInput
       }
     })
     
+    # run simulation and save results
     observeEvent(input$sim_ready, {
-      response <-
-        run_pacehrh_simulation(rv, input_file = rv$input_file)
-      #map the key value pairs from the response to the reactive value
-      keys <- names(response)
-      for (key in keys) {
-        rv[[key]] <- response[[key]]
-      }
-      # save run_name to localstorage
-      
-      js_code_save <- "
+      if (input$sim_ready){
+        response <- run_pacehrh_simulation(rv, input_file = rv$input_file)
+        if (!is.null(response) && length(response) != 0){
+          #map the key value pairs from the response to the reactive value
+          keys <- names(response)
+          for (key in keys) {
+            rv[[key]] <- response[[key]]
+          }
+          # save run_name to localstorage
+          
+          js_code_save <-"
           var new_run = {
             name: '%s',
             date: new Date().toLocaleString(),
@@ -456,21 +547,34 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           var test_names = JSON.parse(localStorage.getItem('test_names')) || [];
           test_names.push(new_run);
           localStorage.setItem('test_names', JSON.stringify(test_names));
-        "
-      js_code_save <- sprintf(js_code_save, 
-                              rv$run_name, 
-                              rv$start_year, 
-                              rv$end_year, 
-                              rv$scenarios_input$BaselinePop, 
-                              rv$scenarios_input$HrsPerWeek,
-                              rv$scenarios_input$MaxUtilization,
-                              ifelse(is.null(rv$region), 'NA', rv$region)
-                              )
-      print(js_code_save)
-      shinyjs::runjs(js_code_save)
-      output$runSimMsg <- renderUI(
-        HTML(paste0("<div style='color:green;'>", "Simulation completed", "</div>"))
-      )
+          "
+          js_code_save <- sprintf(js_code_save, 
+                                  rv$run_name, 
+                                  rv$start_year, 
+                                  rv$end_year, 
+                                  rv$scenarios_input$BaselinePop, 
+                                  rv$scenarios_input$HrsPerWeek,
+                                  rv$scenarios_input$MaxUtilization,
+                                  ifelse(is.null(rv$region), 'NA', rv$region)
+                                  )
+        
+          print(js_code_save)
+          shinyjs::runjs(js_code_save)
+          loggerServer("logger", paste0("Simulation completed : ", rv$run_name))
+          shinyjs::runjs(sprintf("Shiny.setInputValue('%s', 'FALSE');", ns('sim_ready')))
+          shinyjs::show(id=ns("close_sim_log"), asis=TRUE)
+          rv$sim_finished <- TRUE
+        }
+      }
+    })
+    
+    # close simulation logs
+    observeEvent(input$close_sim_log, {
+      browser()
+      shinyjs::html(id="log-display", "", asis=TRUE)
+      # shinyjs::runjs(sprintf('document.getElementById("%s").disabled = true;', ns("close_sim_log")))
+      shinyjs::hide(id="sim_logger_area", asis=TRUE)
+      shinyjs::hide(id=ns("close_sim_log"), asis=TRUE)
     })
     
     ### handle result viewing
@@ -486,6 +590,8 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
     ### handle view results from run simulation step 4
     observeEvent(input$compareBtn, {
       return_event(TRUE)
+      # go back the step 1 for the next round
+      navPage(-3)
     })
     
   })

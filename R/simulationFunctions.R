@@ -110,32 +110,45 @@ run_pacehrh_simulation <- function(rv, input_file){
       inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr")) %>%
       mutate(test_name = rv$run_name)
     
-    loggerServer("logger", paste0("Saving Mean_ServiceCat to : ", rv$run_name))
+    loggerServer("logger", paste0("Saving Mean_ServiceCat to : ", file.path(results_dir, "Mean_ServiceCat.csv")))
     write.csv(new_rv$Mean_ServiceCat,file.path(results_dir, "Mean_ServiceCat.csv"), row.names = FALSE)
     
-    loggerServer("logger", paste0("Saving to Stats_TotClin: ", rv$run_name))
+    loggerServer("logger", paste0("Saving to Stats_TotClin: ", file.path(results_dir, "Stats_TotClin.csv")))
     write.csv(new_rv$Stats_TotClin, file.path(results_dir, "Stats_TotClin.csv"), row.names = FALSE)
     
-    loggerServer("logger", paste0("Saving Mean_ClinCat to : ", rv$run_name))
+    loggerServer("logger", paste0("Saving Mean_ClinCat to : ", file.path(results_dir, "Mean_ClinCat.csv")))
     write.csv(new_rv$Mean_ClinCat, file.path(results_dir, "Mean_ClinCat.csv"), row.names = FALSE)
     
-    loggerServer("logger", paste0("Saving Mean_Total to : ", rv$run_name))
+    loggerServer("logger", paste0("Saving Mean_Total to : ", file.path(results_dir, "Mean_Total.csv")))
     write.csv(new_rv$Mean_Total, file.path(results_dir, "Mean_Total.csv"), row.names = FALSE)
     
-    loggerServer("logger", paste0("Saving Stats_ClinMonth to : ", rv$run_name))
+    loggerServer("logger", paste0("Saving Stats_ClinMonth to : ", file.path(results_dir, "Stats_ClinMonth.csv")))
     write.csv(new_rv$Stats_ClinMonth, file.path(results_dir, "Stats_ClinMonth.csv"), row.names = FALSE)
     
-    loggerServer("logger", paste0("Saving ByRun_ClinMonth to : ", rv$run_name))
+    loggerServer("logger", paste0("Saving ByRun_ClinMonth to : ", file.path(results_dir, "ByRun_ClinMonth.csv")))
     write.csv(new_rv$ByRun_ClinMonth, file.path(results_dir, "ByRun_ClinMonth.csv"), row.names = FALSE)
     
-    loggerServer("logger", paste0("Saving Mean_Alloc to : ", rv$run_name))
+    loggerServer("logger", paste0("Saving Mean_Alloc to : ", file.path(results_dir, "Mean_Alloc.csv")))
     write.csv(new_rv$Mean_Alloc, file.path(results_dir, "Mean_Alloc.csv"), row.names = FALSE)
     
+    save_config_file <- file.path(results_dir, "config.xlsx")
+    loggerServer("logger", paste0("Saving config file to : ", save_config_file))
+    file.copy(input_file, save_config_file, overwrite = TRUE)
+    wb <- loadWorkbook(save_config_file)
     
+    # Remove region info as the sheet may have been modified
+    tryCatch({
+      wb <- removeWorksheet(wb, "RegionSelect")
+      saveWorkbook(wb, save_config_file)
+      }, error=function(e){
+        loggerServer("logger", paste0("No region available: ", e$message))
+    })
     
-  }, error=function(){
+  }, error=function(e){
+    loggerServer("logger", paste0("Run failed: ", e$message))
+    loggerServer("logger", paste0("Please attach the log when reporting the error"), close=TRUE)
     unlink(file.path(results_dir), recursive = TRUE)
+    new_rv = NULL
   })
-  
   return(new_rv)
 }

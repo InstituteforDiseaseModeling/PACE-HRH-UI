@@ -134,22 +134,32 @@ ul.navbar-nav{
 
 /*logger styles*/
 .sticky-logger {
-    position: fixed;
+    position: relative;
     bottom: 45px;
-    width: 100%;
     background-color: #b8631d;
     color: white;
     z-index: 2000;
     display: flex;
 }
 
+
 .log-content {
-  padding: 0px;
-  width: 100%;
+  width: 50%;            /* Set the width of the log window to 50% of its container */
+  margin: 0 auto;        /* Center the div in the container */
+  background-color:#C6DBEF;  /* Orange background like your current log */
+  height: 200px;         /* Set a fixed height, adjust as needed */
+  overflow-y: scroll;    /* Add vertical scroll */
+  padding: 10px;         /* Add padding inside the div */
+  box-sizing: border-box; /* Include padding in the div's width and height */
+  padding:10px;
+  padding-right:20px;
+  padding-bottom:30px;
 }
 
 .log-header {
-  background-color:#333333;
+  width: 50%;            /* Set the width of the log window to 50% of its container */
+  margin: 0 auto;        /* Center the div in the container */
+  background-color:#6BAED6;
   border-bottom: lightgrey 1px solid;
 }
 

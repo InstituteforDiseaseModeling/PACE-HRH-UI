@@ -32,6 +32,10 @@ headerUI <- function(id) {
           tags$br(),
           tags$br(),
           tags$br(),
+          actionButton(ns("run_previous_config"), "Run from previous config", class='menuButton'),
+          tags$br(),
+          tags$br(),
+          tags$br(),
           actionButton(ns("view_runs"), "View previous runs", class='menuButton'),
         ))
     ),
@@ -62,7 +66,10 @@ headerServer <- function(id, store=NULL) {
   ### initialize variables used in simulation steps
   rv <- reactiveValues(page = 1, 
                        region_changed = FALSE,
-                       input_file = config_file
+                       input_file = global_config_file,
+                       scenarios_sheet = "Scenarios",
+                       folder_df = NULL,
+                       selected_config_path = NULL,
   )
  
   moduleServer(id, function(input, output, session) {
@@ -86,17 +93,11 @@ headerServer <- function(id, store=NULL) {
     shinyjs::runjs(gsub("\n", "", js_code))
     
     observeEvent(input$uid, {
-      # create a inputfile for the current user based on uid 
-      prefix <- unlist(strsplit(config_file, "\\."))[1]
-      rv$input_file <- paste0(prefix, "_", input$uid, ".xlsx")
+      # create a inputfile for the current user based on uid
+      rv$input_file <-  reload_config(input$uid) 
       rv$uid <- input$uid
-      
-      if (!file.exists(rv$input_file)){
-        file.copy(config_file, rv$input_file, overwrite = TRUE)
-      }
       ### Simplfy to assume only one scenario case
-      rv$scenarios_sheet <- "Scenarios"
-      rv$scenarios_input <- first(read_excel(rv$input_file, sheet = "Scenarios"))
+      rv$scenarios_input <- first(read_excel(rv$input_file, sheet = rv$scenarios_sheet))
     })
     
     # Observe the event and switch to result
@@ -109,10 +110,65 @@ headerServer <- function(id, store=NULL) {
     
     # navbarPage functions
     observeEvent(input$run_simulation, {
+      
+      rv$input_file <-  reload_config(input$uid)
+      rv$scenarios_input <- first(read_excel(rv$input_file, sheet = rv$scenarios_sheet))
       updateNavbarPage(session, inputId = "header_options", selected = "Run Simulation" )
       # set up user config file 
       
     })
+    
+    observeEvent(input$run_previous_config, {
+      rv$folder_df <- get_result_folders_dt()
+      if (!is.null(rv$folder_df) & nrow(rv$folder_df) > 0){
+        # populate previous run config, let user select it as config
+        showModal(
+          modalDialog(
+            title = "Select config file from previous run",
+            "Please note that the region data is not supported.",
+            DTOutput(ns("dt_select_prev_config")),
+            footer = tagList(
+              actionButton(ns("proceedPrevConfigBtn"), "Proceed"),
+              modalButton("Cancel")
+            )
+          )
+        )
+      }
+      else{
+        showModal(
+          modalDialog(
+            title = "Unable to use previous config",
+            "You did not have any previous results available yet, please start a new simulation.",
+          )
+        )
+      }
+    })
+    
+    # Render the folder table using DT
+    
+    output$dt_select_prev_config <- renderDT({
+      datatable(rv$folder_df, selection = 'single')
+    })
+    
+    # Store the selected config file path
+    observeEvent(input$dt_select_prev_config_rows_selected, {
+      rv$selected_config_path <- renderText({
+        req(input$dt_select_prev_config_rows_selected)
+        selected_row <- input$dt_select_prev_config_rows_selected
+        file.path(result_root, rv$folder_df[selected_row, "run_name"], "config.xlsx")
+      })
+    })
+
+    # Handle the previously used config scenario 
+    observeEvent(input$proceedPrevConfigBtn, {
+      removeModal()
+      if (!is.null(rv$selected_config_path())){
+        rv$input_file <- reload_config(input$uid, rv$selected_config_path())
+        rv$scenarios_input <- first(read_excel(rv$input_file, sheet = rv$scenarios_sheet))
+        updateNavbarPage(session, inputId = "header_options", selected = "Run Simulation" )
+      }
+    })
+    
     
     observeEvent(input$view_runs, {
       updateNavbarPage(session, inputId = "header_options", selected = "View Previous Results")

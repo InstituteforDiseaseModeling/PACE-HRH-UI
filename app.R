@@ -4,6 +4,11 @@ library(shinyStore)
 ui <- fluidPage(
                 includeCSS("www/css/styles.css"),
                 useShinyjs(),
+                tags$script(HTML("
+                  $(document).on('shiny:connected', function(event) {
+                  window.resizeTo(1050, 600); // Use optimal window size
+                  });
+                ")),
                 tags$head(
                   tags$link(rel="shortcut icon", href = "assets/favicon.ico"),
                   tags$link(rel ="stylesheet", type="text/css", href = "css/styles.css"),

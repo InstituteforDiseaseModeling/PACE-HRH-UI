@@ -5,34 +5,29 @@ library(shinycssloaders)
 
 
 loggerUI <- function(id){
-  fluidRow(div(
-    class = "sticky-logger row",
-    div(
-      class = "log-content",
-      div(class = "log-header",
-          tags$div( style="padding:10px;padding-right:20px;",
-                    tags$h6("● ● ●", style = "margin:0!important; float: right; display: inline;"),
-                    tags$h5("Simulation Logs", style = "margin:0!important;")
-          )),
-      tags$div(style = "padding-right:10px;",shinyBS::bsAlert("log-display"))
-      
+  ns <- NS(id)
+  fluidRow(
+    shinyjs::useShinyjs(),
+      div(
+        id = ns("log"),
+        div(class= "log-header",
+          tags$div(tags$h5("Pace-HRH UI Logs")
+        )),
+      tags$div(class="log-content", shinyBS::bsAlert("log-display")),
     ),
-  ))
+  )
 }
 
 
-loggerServer <- function(id, message=NULL, three_dots = FALSE){
-  session <- shiny::getDefaultReactiveDomain()
-  if(three_dots){
-    # message <- paste0(message, "...")
-    message <- paste0("<div>",message,'<div class="lds-ellipsis"><div></div><div></div><div></div></div>',"</div>")
-
-  }
-  shinyBS::  createAlert(
-    session,
-    "log-display",
-    content = message,
-    append = FALSE,
-    dismiss = FALSE
-  )
+loggerServer <- function(id, message=NULL){
+  moduleServer(id, function(input, output, session) {
+    current_session <- shiny::getDefaultReactiveDomain()
+    shinyBS::  createAlert(
+      current_session,
+      "log-display",
+      content = message,
+      append = TRUE,
+      dismiss = FALSE
+    )
+  })
 }

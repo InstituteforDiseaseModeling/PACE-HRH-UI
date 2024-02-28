@@ -39,7 +39,7 @@ plotTabServer <- function(id, plotting_function, rv, show_wait=TRUE) {
       if (!is.null(rv$results) ) {
         plot <- do.call(plotting_function, list(rv))
         plotLoading(FALSE)
-        plot %>% ggplotly(height = 800)
+        plot %>% ggplotly(height = 500)
       }else{
         print("no results")
         NULL
