@@ -146,6 +146,7 @@ ul.navbar-nav{
 .log-content {
   width: 50%;            /* Set the width of the log window to 50% of its container */
   margin: 0 auto;        /* Center the div in the container */
+  color:black;
   background-color:#C6DBEF;  /* Orange background like your current log */
   height: 200px;         /* Set a fixed height, adjust as needed */
   overflow-y: scroll;    /* Add vertical scroll */
@@ -168,6 +169,7 @@ ul.navbar-nav{
   border-color: rgba(0,0,0,0)!important;
   padding: 2px 5px!important;
   margin: 0!important;
+  color: black;
 }
 
 .lds-ellipsis {
@@ -275,4 +277,9 @@ ul.navbar-nav{
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.plots {
+  width: 73%;
+  margin: 0 auto;
 }

@@ -76,21 +76,7 @@ headerServer <- function(id, store=NULL) {
     ns <- session$ns
     
     # set uid to reactiveValues
-    js_code = sprintf("
-                function set_uid(){
-                  if (localStorage.getItem('uid')) {
-                    return localStorage.getItem('uid');
-                  } 
-                  else {
-                    v = (Math.random() + 1).toString(36).substring(7);
-                    localStorage.setItem('uid', v);
-                    return v;
-                  }
-                }
-                var uid = set_uid(); 
-                Shiny.setInputValue('%s', uid);", ns("uid"))
-    print(gsub("\n", "", js_code))
-    shinyjs::runjs(gsub("\n", "", js_code))
+    shinyjs::runjs(sprintf("set_shiny_uid('%s')", ns("uid")))
     
     observeEvent(input$uid, {
       # create a inputfile for the current user based on uid
@@ -118,9 +104,10 @@ headerServer <- function(id, store=NULL) {
       
     })
     
-    observeEvent(input$run_previous_config, {
-      rv$folder_df <- get_result_folders_dt()
-      if (!is.null(rv$folder_df) & nrow(rv$folder_df) > 0){
+    observeEvent(input$prev_run_names, {
+      # update the folder_df when requested
+      rv$folder_df <- get_result_folders_dt(input$prev_run_names)
+      if (!is.null(rv$folder_df)){
         # populate previous run config, let user select it as config
         showModal(
           modalDialog(
@@ -142,6 +129,11 @@ headerServer <- function(id, store=NULL) {
           )
         )
       }
+    })
+    
+    observeEvent(input$run_previous_config, {
+      # check test names from local storage
+      shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("prev_run_names"), ns("prev_run_details")))
     })
     
     # Render the folder table using DT

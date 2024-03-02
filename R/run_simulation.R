@@ -7,7 +7,7 @@ num_replication_str <- " Indicate how many replications (trials) that you want t
 but also require more time and larger data files. We recommend running between 100 and 1000.
 "
 
-sim_pages<- c("Configuration", "Input Validation", "Run Simulation", "View Results")
+sim_pages<- c("Configuration", "Input Validation", "Run Simulation")
 
 # Simulation steps as hidden tabs to create step by step effect
 
@@ -100,18 +100,6 @@ sim_tabs <- function(ns){
            
   
   ),
-  tabPanel(sim_pages[4], 
-           fluidRow(
-             column(12,  HTML("<br><br>"))
-           ),
-           fluidRow(
-             column(4, actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots")), 
-             # column(4, offset=2, actionButton(ns("save_resultsBtn"), "Save Results for later comparison"))
-             column(4, downloadButton(ns("download_resultsBtn"), "Download Results (.csv)", )), 
-             column(4, actionButton(ns("compareBtn"), "Select Previous runs to compare"))
-             
-           ),
-  )
 )}
 
 # UI for the run simulation module
@@ -119,7 +107,6 @@ sim_tabs <- function(ns){
 runSimulationUI <- function(id) {
   ns <- NS(id)
   fluidPage(
-    includeScript("www/js/message.js"),
     shinyjs::useShinyjs(),
     
       fluidRow(
@@ -132,10 +119,10 @@ runSimulationUI <- function(id) {
       
       fluidRow(
         column(2, hidden(div(id = ns("prevDiv"), 
-                             actionButton(ns("prevBtn"), "Previous"), align="right"))),
+                             actionButton(ns("prevBtn"), "Previous"), align="center"))),
         column(8, HTML("<br>")),
         column(2, div(id = ns("nextDiv"), 
-                      actionButton(ns("nextBtn"), "Next"), align="right")),
+                      actionButton(ns("nextBtn"), "Next"), align="center")),
       ),
 
       fluidRow(column(12, HTML("<br>"))
@@ -152,7 +139,6 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
   
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    rv$sim_finished <- FALSE
     
     # function to trigger config file saving before simulation
     trigger_file_saving <- function(ns){
@@ -257,24 +243,25 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       if(rv$page > 1){
         show("prevDiv")
       }
-      if(rv$page < length(sim_pages)){
+      if(rv$page <= length(sim_pages)){
         show("nextDiv")
       }
       if(rv$page >= which(sim_pages == "Run Simulation")){
         hide("skipAll")
-        if (rv$sim_finished){
-          # only allow one sim per run
-          hide("prevDiv")
-        }
+        updateActionButton(session, "nextBtn", label = "Go To Results")
+      }else{
+        updateActionButton(session, "nextBtn", label = "Next")
       }
     })
 
     ### navigate Page to the corresponding UI
-    navPage <- function(direction, sim=FALSE) {
+    navPage <- function(direction, sim=FALSE, restart=FALSE) {
       if (sim){
-        # go to sim Page 
-        sim_index <- which(sim_pages == "Run Simulation")
-        rv$page <- sim_index
+        # go to sim Page
+        rv$page <- which(sim_pages == "Run Simulation")
+      }
+      else if(restart){
+        rv$page <- which(sim_pages == "Configuration")
       }
       else{
         rv$page <- rv$page + direction
@@ -315,7 +302,13 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
     observeEvent(input$prevBtn, navPage(-1))
     observeEvent(input$nextBtn, {
       save_values()
-      navPage(1)
+      if (rv$page >= which(sim_pages == "Run Simulation")) {
+        return_event(TRUE)
+        navPage(0, restart=TRUE)
+      }
+      else{
+        navPage(1)
+      }
     })
     
     observeEvent(input$skipBtn, {
@@ -563,35 +556,15 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           loggerServer("logger", paste0("Simulation completed : ", rv$run_name))
           shinyjs::runjs(sprintf("Shiny.setInputValue('%s', 'FALSE');", ns('sim_ready')))
           shinyjs::show(id=ns("close_sim_log"), asis=TRUE)
-          rv$sim_finished <- TRUE
         }
       }
     })
     
     # close simulation logs
     observeEvent(input$close_sim_log, {
-      browser()
       shinyjs::html(id="log-display", "", asis=TRUE)
-      # shinyjs::runjs(sprintf('document.getElementById("%s").disabled = true;', ns("close_sim_log")))
       shinyjs::hide(id="sim_logger_area", asis=TRUE)
       shinyjs::hide(id=ns("close_sim_log"), asis=TRUE)
-    })
-    
-    ### handle result viewing
-    
-    output$download_resultsBtn <- downloadHandler(
-      filename = paste0("results_", rv$run_name, ".zip"),
-      content = function(file) 
-      {
-        folder_name <- file.path(result_root, rv$run_name)
-        zip(file, files = list.files(folder_name, full.names = TRUE))
-      })
-    
-    ### handle view results from run simulation step 4
-    observeEvent(input$compareBtn, {
-      return_event(TRUE)
-      # go back the step 1 for the next round
-      navPage(-3)
     })
     
   })

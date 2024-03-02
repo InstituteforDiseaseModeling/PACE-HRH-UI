@@ -52,7 +52,7 @@ plotTabServer <- function(id, plotting_function, rv, show_wait=TRUE) {
 # Define the simple plot Module without tabpanel
 simpleplotUI <- function(id,title) {
   ns <- NS(id)
-  plotOutput(ns("plot"))
+  div(class="plots",  plotOutput(ns("plot")))
 }
 
 simpleplotServer <- function(id, plotFunction, rv) {

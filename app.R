@@ -3,6 +3,7 @@ library(shinyStore)
 
 ui <- fluidPage(
                 includeCSS("www/css/styles.css"),
+                includeScript("www/js/util.js"),
                 useShinyjs(),
                 tags$script(HTML("
                   $(document).on('shiny:connected', function(event) {

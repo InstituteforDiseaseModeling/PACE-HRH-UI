@@ -18,12 +18,16 @@ viewRunsUI <- function(id) {
                 # selectInput(ns("run_selector"), "Choose a Run To view", choices =NULL),
                 dataTableOutput(ns("history_table")),
                 actionButton(ns("compare_btn"), "Show / Compare Result"),
-                downloadButton(ns("download"), "Download")
+                actionButton(ns("download_resultsBtn"), "Download Results (.csv)", ),
+                actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots")
             )
       )
     ),
     fluidRow(
-      div(id = ns("search_msg"), "Searching for results, this may take awhile...", div(class = "spinner"), style = "display: none;"),
+      div(HTML("<br>"), uiOutput(ns("downloadBtn"))),
+    ),
+    fluidRow(
+      div(id = ns("search_msg"), "Searching and processing results, this may take awhile...", div(class = "spinner"), style = "display: none;"),
     ),
     tabsetPanel(
       id = "main-tabs",
@@ -51,21 +55,12 @@ viewRunsServer <- function(id, rv, store) {
     selectedRows <- reactiveVal(c(TRUE))
     redraw <- reactiveVal(FALSE)
     rv_results <- reactiveValues()
+    download_filenames <- reactiveVal(NULL)
     
     autoInvalidate <- reactiveTimer(2000)
     observe({
       autoInvalidate()
-      js_code <- "
-      var arr = [];
-      var arr_history = localStorage.getItem('test_names');
-      var test_names = JSON.parse(localStorage.getItem('test_names')) || [];
-      for (let i = 0; i < test_names.length; i++) {
-       arr.push(test_names[i].name)
-      }
-      Shiny.setInputValue('%s', arr);
-      Shiny.setInputValue('%s', arr_history);
-      "
-      shinyjs::runjs(sprintf(js_code, ns("test_names_loaded"), ns("test_history")))  
+      shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("test_names_loaded"), ns("test_history")))
       updateSelectInput(session, "run_selector",
                         label = "Choose a Run To view",
                         choices = input$test_names_loaded,
@@ -198,10 +193,32 @@ viewRunsServer <- function(id, rv, store) {
        
     })
     
-    observeEvent(input$download, {
-      # Code to handle the file download
-      
-
+    ### handle download
+    observeEvent(input$download_resultsBtn, {
+      download_filenames(NULL)
+      shinyjs::disable(ns("downloadZipBtn"), asis = TRUE)
+      shinyjs::show(id=ns("search_msg"), asis = TRUE)
+      selected <- which(selectedRows())
+      test_selected <- rv$df_history[selected, 'name']
+      folder_name <- file.path(result_root, test_selected)
+      download_filenames(zip_folders(folder_name))
+      shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+      shinyjs::enable(ns("downloadZipBtn"), asis = TRUE)
     })
+    
+    output$downloadBtn <- renderUI({
+      req(download_filenames())
+      downloadButton(
+        outputId = ns("downloadZipBtn"),
+        label = "Download your zip file here!",
+        )
+    })
+    
+    output$downloadZipBtn <- downloadHandler(
+      filename = basename(download_filenames()),
+      content = function(file) {
+        file.copy(download_filenames(), file)
+      },
+    )
   })
 }
