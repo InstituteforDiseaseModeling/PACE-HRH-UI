@@ -200,25 +200,32 @@ viewRunsServer <- function(id, rv, store) {
     })
     
     ### handle download
-    observeEvent(input$download_resultsBtn, {
-      download_filenames(NULL)
+    
+    before_download <- function(){
       shinyjs::disable(ns("downloadZipBtn"), asis = TRUE)
+      shinyjs::disable(ns("downloadPDFBtn"), asis = TRUE)
       shinyjs::show(id=ns("search_msg"), asis = TRUE)
+    }
+    
+    observeEvent(input$download_resultsBtn, {
+      before_download()
+      download_filenames(NULL)
       selected <- which(selectedRows())
       test_selected <- rv$df_history[selected, 'name']
       folder_name <- file.path(result_root, test_selected)
       download_filenames(zip_folders(folder_name))
       shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+      
+      output$downloadBtn <- renderUI({
+        req(download_filenames())
+        downloadButton(
+          outputId = ns("downloadZipBtn"),
+          label = "Download your zip file here!",
+          onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
+          class = "download-button"
+        )
+      })
       shinyjs::enable(ns("downloadZipBtn"), asis = TRUE)
-    })
-    
-    output$downloadBtn <- renderUI({
-      req(download_filenames())
-      downloadButton(
-        outputId = ns("downloadZipBtn"),
-        label = "Download your zip file here!",
-        onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked"))
-      )
     })
     
     output$downloadZipBtn <- downloadHandler(
@@ -239,7 +246,7 @@ viewRunsServer <- function(id, rv, store) {
     
     ### handle pdf report
     observeEvent(input$print_summaryBtn, {
-      shinyjs::show(id=ns("search_msg"), asis = TRUE)
+      before_download()
       selected <- which(selectedRows())
       test_selected <- rv$df_history[selected, 'name']
       if(combine_selected_data(selected)){
@@ -253,9 +260,11 @@ viewRunsServer <- function(id, rv, store) {
         downloadButton(
           outputId = ns("downloadPDFBtn"),
           label = "Download your pdf report here!",
-          onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_pdf_clicked"))
+          onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_pdf_clicked")),
+          class = "download-button"
         )
       })
+      shinyjs::enable(ns("downloadPDFBtn"), asis = TRUE)
     })
     
     output$downloadPDFBtn <- downloadHandler(

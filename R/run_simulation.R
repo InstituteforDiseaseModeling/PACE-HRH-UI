@@ -212,9 +212,6 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       }
     })
   
-    output$step_title <- renderUI({
-      HTML(paste0("<h2>", sim_pages[rv$page], "</h2>"))
-    })
 
     ### handle conditional button appearance
     observe({
@@ -233,6 +230,12 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       }else{
         updateActionButton(session, "nextBtn", label = "Next")
       }
+      
+      output$step_title <- renderUI({
+        image_filename <- paste0("assets/step", rv$page, ".png")
+        img(src = image_filename, width = "600px", height = "150px", class="center")
+        # HTML(paste0("<h2>", sim_pages[rv$page], "</h2>"))
+      })
     })
 
     ### navigate Page to the corresponding UI
@@ -249,9 +252,6 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       }
       if (rv$page >0 & rv$page <= length(sim_pages)){
         print(paste0("Select ", sim_pages[rv$page]))
-        output$step_title <- renderUI({
-          HTML(paste0("<h2>", sim_pages[rv$page], "</h2>"))
-        })
         updateTabsetPanel(inputId = "simulation_steps", selected = sim_pages[rv$page])
       }
       

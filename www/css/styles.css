@@ -283,3 +283,45 @@ ul.navbar-nav{
   width: 73%;
   margin: 0 auto;
 }
+
+.center {
+  display: block;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+
+/* Basic button styles */
+.download-button {
+  background-color: #4CAF50; /* Green background */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+/* Hover effect */
+.download-button:hover {
+  background-color: #45a049; /* Darker green */
+}
+
+/* Focus effect */
+.download-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2); /* Add a blue border when focused */
+}
+
+/* Disabled button */
+.download-button:disabled {
+  background-color: #cccccc; /* Light gray */
+  cursor: not-allowed;
+}
