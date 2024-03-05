@@ -41,7 +41,7 @@ sim_tabs <- function(ns){
            ),
            fluidRow(
              column(6,
-                    selectInput(ns("region"), "Region", choices = NULL),      
+                    selectInput(ns("region"), "Region", choices = names(region_config_files), selected = names(region_config_files)[length(names(region_config_files))]),      
              ),
              column(6,
                     # shinyWidgets::autonumericInput(
@@ -139,7 +139,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
   
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+    rv$current_region <- names(region_config_files)[length(names(region_config_files))]
     # function to trigger config file saving before simulation
     trigger_file_saving <- function(ns){
       js_code = sprintf("Shiny.setInputValue('%s', 'starting', {priority: 'event'});" ,ns("saving"))
@@ -149,13 +149,15 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
     
     # Set sheet data based on input scenario
     observe({
-      rv$scenario_selected <- rv$scenarios_input$UniqueID
-      rv$seasonality_sheet <- rv$scenarios_input$sheet_SeasonalityCurves
-      rv$seasonality_input <- read_excel(rv$input_file, sheet = rv$seasonality_sheet)
-      rv$task_sheet <- rv$scenarios_input$sheet_TaskValues
-      rv$task_input <- read_excel(rv$input_file, sheet = rv$task_sheet)
-      rv$pop_input <- read_excel(rv$input_file, sheet = "TotalPop")
-      rv$pop_values <- read_excel(rv$input_file, sheet = rv$scenarios_input$sheet_PopValues)
+      if (!is.null(rv$uid)) {
+        rv$scenario_selected <- rv$scenarios_input$UniqueID
+        rv$seasonality_sheet <- rv$scenarios_input$sheet_SeasonalityCurves
+        rv$seasonality_input <- read_excel(rv$input_file, sheet = rv$seasonality_sheet)
+        rv$task_sheet <- rv$scenarios_input$sheet_TaskValues
+        rv$task_input <- read_excel(rv$input_file, sheet = rv$task_sheet)
+        rv$pop_input <- read_excel(rv$input_file, sheet = "TotalPop")
+        rv$pop_values <- read_excel(rv$input_file, sheet = rv$scenarios_input$sheet_PopValues)
+      }
       
       # reformat hrh utilization
       formatted_value <- sprintf("%.2f", input$hrh_utilization)
@@ -165,20 +167,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
                                  )
               )
       if(sim_pages[rv$page]=="Configuration"){
-        if(file.exists(region_list)){
-          region_names <- readLines(region_list)
-          # findout what is the selection in the workbook
-          isolate({
-            command = paste0("cd vbscript & cscript getCurrentRegion.vbs",  " ../", rv$input_file)
-            system(command ="cmd", input=command,  intern=TRUE, wait =TRUE)
-            
-          })
-          
-          
-          isolate(updateSelectInput(session, "region", choices = region_names, selected = region_names[1]))
-          rv$current_region <-  region_names[1]
-        }
-        else{
+        if(!rv$show_region){
           isolate(updateSelectInput(session, "region", label = "Region (Unavailable)"))
           shinyjs::disable("region")
         }
@@ -206,18 +195,10 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
     
     observeEvent(input$proceedRegionBtn, {
       removeModal()
-      reload_config(rv$uid)
-      rv$scenarios_sheet <- "Scenarios"
-      rv$scenarios_input <- first(read_excel(rv$input_file, sheet = "Scenarios"))
       rv$current_region <- input$region
-      if ("RegionSelect" %in% excel_sheets(rv$input_file)){
-        # call vbs script to change config
-        # session$sendCustomMessage("notify_handler", paste0("region changes may reset your optional data"))
-        isolate({
-          command = paste0("cd vbscript & cscript updateRegion.vbs \"", input$region, "\" ../", rv$input_file)
-          system(command ="cmd", input=command,  wait =TRUE)
-        })
-      }
+      rv$input_file <- region_config_files[[rv$current_region]]
+      reload_config(rv$uid, rv$input_file)
+      rv$scenarios_input <- first(read_excel(rv$input_file, sheet = rv$scenarios_sheet))
       # reload optional data
       rv$task_input <- read_excel(rv$input_file, sheet = rv$task_sheet)
       rv$seasonality_input <- read_excel(rv$input_file, sheet = rv$seasonality_sheet)

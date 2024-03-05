@@ -21,7 +21,7 @@ function set_shiny_uid(shiny_input_name){
     Shiny.setInputValue(shiny_input_name, uid)
 }
               
-function get_test_names(names, history){
+function get_test_names(names, history, notify ="false"){
   var arr = [];
   var arr_history = localStorage.getItem('test_names');
   var test_names = JSON.parse(localStorage.getItem('test_names')) || [];
@@ -30,4 +30,7 @@ function get_test_names(names, history){
   }
   Shiny.setInputValue(names, arr, {priority: 'event'});
   Shiny.setInputValue(history, arr_history, {priority: 'event'});
+  if (notify!=="false"){
+    Shiny.setInputValue(notify, "true", {priority: 'event'});
+  }
 }              

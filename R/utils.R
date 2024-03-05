@@ -36,21 +36,10 @@ reload_original_config <- function(){
 }
 
 reload_config <- function(uid, base_config_file = NULL){
-  # create a inputfile for the current user based on uid
-  
-  # region_list indicates there is region available so we need to clear it 
-  if (file.exists(region_list)){
-    file.remove(region_list)
-  }
-  
-  # Only support region with default global config
   if (is.null(base_config_file)){
     base_config_file <- global_config_file
-    if ("RegionSelect" %in% excel_sheets(base_config_file)){
-      command = paste0("cd vbscript & cscript selectRegion.vbs ../",base_config_file)
-      system(command ="cmd", input=command,  wait =TRUE)
-    }
   }
+  # create a inputfile for the current user based on uid
   prefix <- unlist(strsplit(global_config_file, "\\."))[1]
   new_input_file <- paste0(prefix, "_", uid, ".xlsx")
   file.copy(base_config_file, new_input_file, overwrite = TRUE)

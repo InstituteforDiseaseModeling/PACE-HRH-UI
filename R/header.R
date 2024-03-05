@@ -26,6 +26,7 @@ headerUI <- function(id) {
       "Home",
       # homeUI("home-page")
       fluidPage(
+        useShinyjs(),
         tagList(
           tags$br(),
           actionButton(ns("run_simulation"), "Run new simulation", class='menuButton'),
@@ -65,7 +66,7 @@ headerServer <- function(id, store=NULL) {
   
   ### initialize variables used in simulation steps
   rv <- reactiveValues(page = 1, 
-                       region_changed = FALSE,
+                       show_region = TRUE,
                        input_file = global_config_file,
                        scenarios_sheet = "Scenarios",
                        folder_df = NULL,
@@ -99,29 +100,46 @@ headerServer <- function(id, store=NULL) {
       
       rv$input_file <-  reload_config(input$uid)
       rv$scenarios_input <- first(read_excel(rv$input_file, sheet = rv$scenarios_sheet))
+      rv$show_region <- TRUE
       updateNavbarPage(session, inputId = "header_options", selected = "Run Simulation" )
       # set up user config file 
       
     })
     
-    observeEvent(input$prev_run_names, {
-      # update the folder_df when requested
-      rv$folder_df <- get_result_folders_dt(input$prev_run_names)
-      if (!is.null(rv$folder_df)){
-        # populate previous run config, let user select it as config
-        showModal(
-          modalDialog(
-            title = "Select config file from previous run",
-            "Please note that the region data is not supported.",
-            DTOutput(ns("dt_select_prev_config")),
-            footer = tagList(
-              actionButton(ns("proceedPrevConfigBtn"), "Proceed"),
-              modalButton("Cancel")
+    observeEvent(input$run_name_checked, {
+     
+      show_no_result <- FALSE
+      if (!is.null(input$prev_run_names)){
+        # update the folder_df when requested
+        rv$folder_df <- get_result_folders_dt(input$prev_run_names)
+        # Render the folder table using DT
+        
+        output$dt_select_prev_config <- renderDT({
+          datatable(rv$folder_df, selection = 'single')
+        })
+        
+        if (!is.null(rv$folder_df)){
+          # populate previous run config, let user select it as config
+          showModal(
+            modalDialog(
+              title = "Select config file from previous run",
+              "Please note that the region data is not supported.",
+              DTOutput(ns("dt_select_prev_config")),
+              footer = tagList(
+                actionButton(ns("proceedPrevConfigBtn"), "Proceed"),
+                modalButton("Cancel")
+              )
             )
           )
-        )
+        }
+        else{
+          show_no_result <- TRUE
+        }
       }
       else{
+        show_no_result <- TRUE
+      }
+      if(show_no_result){
         showModal(
           modalDialog(
             title = "Unable to use previous config",
@@ -129,17 +147,12 @@ headerServer <- function(id, store=NULL) {
           )
         )
       }
+     
     })
     
     observeEvent(input$run_previous_config, {
       # check test names from local storage
-      shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("prev_run_names"), ns("prev_run_details")))
-    })
-    
-    # Render the folder table using DT
-    
-    output$dt_select_prev_config <- renderDT({
-      datatable(rv$folder_df, selection = 'single')
+      shinyjs::runjs(sprintf("get_test_names('%s', '%s', '%s')", ns("prev_run_names"), ns("prev_run_details"), ns("run_name_checked")))
     })
     
     # Store the selected config file path
@@ -157,6 +170,7 @@ headerServer <- function(id, store=NULL) {
       if (!is.null(rv$selected_config_path())){
         rv$input_file <- reload_config(input$uid, rv$selected_config_path())
         rv$scenarios_input <- first(read_excel(rv$input_file, sheet = rv$scenarios_sheet))
+        rv$show_region <- FALSE
         updateNavbarPage(session, inputId = "header_options", selected = "Run Simulation" )
       }
     })

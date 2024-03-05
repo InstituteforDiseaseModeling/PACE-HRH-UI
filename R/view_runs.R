@@ -17,6 +17,7 @@ viewRunsUI <- function(id) {
              tagList(
                 # selectInput(ns("run_selector"), "Choose a Run To view", choices =NULL),
                 dataTableOutput(ns("history_table")),
+                actionButton(ns("refreshBtn"), "Refresh Results"),
                 actionButton(ns("compare_btn"), "Show / Compare Result"),
                 actionButton(ns("download_resultsBtn"), "Download Results (.csv)", ),
                 actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots")
@@ -52,27 +53,29 @@ viewRunsServer <- function(id, rv, store) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
+    # run once when loaded
+    shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("test_names_loaded"), ns("test_history")))
+    
     selectedRows <- reactiveVal(c(TRUE))
     redraw <- reactiveVal(FALSE)
     rv_results <- reactiveValues()
     download_filenames <- reactiveVal(NULL)
-    
-    autoInvalidate <- reactiveTimer(2000)
-    observe({
-      autoInvalidate()
+   
+    # autoInvalidate <- reactiveTimer(10000)
+    observeEvent(input$refreshBtn, {
+      # autoInvalidate()
       shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("test_names_loaded"), ns("test_history")))
-      updateSelectInput(session, "run_selector",
+      isolate(updateSelectInput(session, "run_selector",
                         label = "Choose a Run To view",
                         choices = input$test_names_loaded,
-      )
+      ))
     })
     
     observeEvent(input$test_history, {
       df_history <- jsonlite::fromJSON(input$test_history)
       df_history$datetime <- as.POSIXct(df_history$date, format = "%m/%d/%Y, %I:%M:%S %p", tz = "UTC")
       rv$df_history <-  df_history%>% arrange(desc(datetime))  %>% select(-(datetime))
-      selectedRows <- reactiveVal(c(TRUE, rep(FALSE, nrow(rv$df_history)-1)))
-      
+      selectedRows(c(TRUE, rep(FALSE, nrow(rv$df_history)-1)))
       output$history_table <- renderDT({
         checkboxData <- transform(rv$df_history, Select = sprintf('<input type="checkbox" name="row_selected" %s/>', ifelse(selectedRows(), "checked", "")))
         datatable(
@@ -211,7 +214,8 @@ viewRunsServer <- function(id, rv, store) {
       downloadButton(
         outputId = ns("downloadZipBtn"),
         label = "Download your zip file here!",
-        )
+        onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked"))
+      )
     })
     
     output$downloadZipBtn <- downloadHandler(
@@ -220,5 +224,14 @@ viewRunsServer <- function(id, rv, store) {
         file.copy(download_filenames(), file)
       },
     )
+    
+    observeEvent(input$download_clicked, {
+      # Hide the download button after it's clicked
+      if (input$download_clicked){
+        print("downloaded. remove the link...")
+        shinyjs::runjs(sprintf('Shiny.setInputValue("%s", false);', ns("download_clicked")))
+        shinyjs::disable(ns("downloadZipBtn"), asis = TRUE)
+      }
+    })
   })
 }

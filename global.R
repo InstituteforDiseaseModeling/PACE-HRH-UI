@@ -2,6 +2,7 @@ library(desc)
 library(httr)
 library(pacehrh)
 library(readxl)
+library(openxlsx)
 library(tidyr)
 
 options(devtools.upgrade = "never")
@@ -29,7 +30,7 @@ if (!requireNamespace("pacehrh", quietly = TRUE)) {
 global_config_file <- "config/model_inputs_demo.xlsx"
 if (!file.exists(global_config_file)){
   print("download sample config...")
-  config_url <- "https://raw.githubusercontent.com/InstituteforDiseaseModeling/PACE-HRH/main/config/model_inputs.xlsx"
+  config_url <- "https://raw.githubusercontent.com/InstituteforDiseaseModeling/PACE-HRH/main/config/model_inputs_demo.xlsx"
   content <- GET(config_url)
   
   content_type <- headers(content)[["content-type"]]
@@ -53,10 +54,18 @@ preload_pop_list <- setNames(preload_pop_files, gsub(".csv","", gsub("_", " ", b
 
 # Preload Region if available
 
-region_list = "config/regions.txt"
-if (file.exists(region_list)){
-  file.remove(region_list)
-}
+has_region <- FALSE
+region_config_files  <- NULL
+region_folder = "config/region"
+region_dirs <- list.dirs(region_folder, recursive = FALSE)
+region_config_files <- lapply(region_dirs, function(x) {
+  f <- list.files(x, full.names = TRUE, pattern = "*.xlsx")
+  f <- f[file.exists(f)]
+  return(f)
+})
+names(region_config_files) <- basename(region_dirs)
+region_config_files[["ethiopia"]] <- global_config_file
+
 
 result_root <- "pace_results"
 show_log <- FALSE

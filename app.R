@@ -1,5 +1,7 @@
 library(shiny)
 library(shinyStore)
+library(shinyjs)
+library(DT)
 
 ui <- fluidPage(
                 includeCSS("www/css/styles.css"),
@@ -31,6 +33,19 @@ server <- function(input, output,session){
   
   # close the app when session ends
   session$onSessionEnded(function() {
+    # delete all downloaded files on the serverafter session ended
+    zipfiles <- list.files(result_root, full.names = TRUE, pattern ="*.zip")
+    for (file in zipfiles) {
+      tryCatch(
+        {
+          file.remove(file)
+          cat("File", basename(file), "deleted successfully.\n")
+        },
+        error = function(e) {
+          cat("Error Removing file:", e$message, "\n")
+        }
+      )
+    }
     stopApp()
   })
   #---------------------------------------------------

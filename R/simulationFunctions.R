@@ -134,15 +134,6 @@ run_pacehrh_simulation <- function(rv, input_file){
     save_config_file <- file.path(results_dir, "config.xlsx")
     loggerServer("logger", paste0("Saving config file to : ", save_config_file))
     file.copy(input_file, save_config_file, overwrite = TRUE)
-    wb <- loadWorkbook(save_config_file)
-    
-    # Remove region info as the sheet may have been modified
-    tryCatch({
-      wb <- removeWorksheet(wb, "RegionSelect")
-      saveWorkbook(wb, save_config_file)
-      }, error=function(e){
-        loggerServer("logger", paste0("No region available: ", e$message))
-    })
     
   }, error=function(e){
     loggerServer("logger", paste0("Run failed: ", e$message))
