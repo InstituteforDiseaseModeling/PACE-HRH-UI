@@ -71,7 +71,7 @@ sim_tabs <- function(ns){
              tabPanel("Population Pyramid", simpleplotUI(ns("population-tab"))),
              tabPanel("Fertility Rates", simpleplotUI(ns("fertility-tab"))),
              tabPanel("Mortality Rates", simpleplotUI(ns("mortality-tab"))),
-             tabPanel("Disease Incidence", simpleplotUI(ns("disease-tab"))),
+             tabPanel("Seasonality", simpleplotUI(ns("season-tab"))),
            )
   ),
   tabPanel(sim_pages[3], 
@@ -262,6 +262,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           simpleplotServer("population-tab", get_population_pyramid_plot, rv)
           simpleplotServer("fertility-tab", get_fertility_rates_plot, rv)
           simpleplotServer("mortality-tab", get_mortality_rates_plot, rv)
+          simpleplotServer("season-tab", get_seasonality_validation_plot, rv)
         }
       }
     }

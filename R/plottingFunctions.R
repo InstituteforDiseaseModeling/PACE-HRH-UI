@@ -53,7 +53,7 @@ get_population_plot <- function(rv) {
 
 
 # -----------------Slide 4 plot---------------------
-get_slide_4_plot <- function(rv){
+get_slide_4_plot <- function(rv, plotly=TRUE){
   #graphic for slide 4 (hours per week on clinical, development, and total work)
   #dashed line is actual hours worked per week, according to time and motion study
   #solid line is the 95th percentile, simulated
@@ -92,11 +92,17 @@ get_slide_4_plot <- function(rv){
     facet_wrap(~Scenario_label)+
     ylab(ylabel) + xlab("") + labs(title = paste("Time Allocation by Clinical Category"))
   
-  ggplotly(plot)
+  if(plotly){
+    ggplotly(plot)
+  }
+  else{
+    plot
+  }
+  
   
 }
 # -----------------by ServiceCat bar plot---------------------
-byServiceCat_plot <- function(rv){
+byServiceCat_plot <- function(rv, plotly=TRUE){
 
   StartYear <-  rv$start_year + 1 
   EndYear <-  rv$end_year 
@@ -127,7 +133,11 @@ byServiceCat_plot <- function(rv){
     scale_fill_brewer(palette = "BrBG", direction = -1)+
     labs(x="Year", y="Hours per Week per Catchment Pop")
   
-  ggplotly(plot)
+  if(plotly){
+    ggplotly(plot)
+  } else{
+    plot
+  }
   
 }
 
@@ -161,7 +171,7 @@ byServiceTile_plot <- function(rv){
 }
 
 # -----------------service over time plot---------------------
-serviceOverTime_plot <- function(rv){
+serviceOverTime_plot <- function(rv, plotly=TRUE){
 
   StartYear <-  rv$start_year + 1
   EndYear <-  rv$end_year  
@@ -192,13 +202,17 @@ serviceOverTime_plot <- function(rv){
     theme(legend.title = element_blank(), legend.position="bottom",axis.text.x = element_text(angle=-90, vjust = .5, hjust=1)) +
     labs(x = "", y = "Ratio to Baseline Year")
   
- ggplotly(plot)
+  if(plotly){
+    ggplotly(plot)
+  } else{
+    plot
+  }
   
 }
 
 
 # -----------------seasonality plot---------------------
-seasonality_plot <- function(rv){
+seasonality_plot <- function(rv, plotly=TRUE){
  
   StartYear <-  rv$start_year + 1
   EndYear <-  rv$end_year  
@@ -234,7 +248,31 @@ seasonality_plot <- function(rv){
     facet_wrap(~test_name)+
     labs(x = "Month", y="Ratio of workload for the month to annual average")
   
-  ggplotly(plot)
+  if(plotly){
+    ggplotly(plot)
+  } else{
+    plot
+  }
   
 }
 
+
+
+get_pdf_report <- function(rv){
+  # print to pdf
+  current_datetime <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
+  filename <- file.path(result_root, paste0("report_", current_datetime, ".pdf"))
+  pdf(file = filename, width = 11, height = 8.5)
+  p1 <- get_slide_4_plot(rv, plotly = FALSE)
+  p2 <- byServiceCat_plot(rv, plotly = FALSE)
+  p3 <- byServiceTile_plot(rv)
+  p4 <- serviceOverTime_plot(rv, plotly = FALSE)
+  p5 <- seasonality_plot(rv)
+  print(p1)
+  print(p2)
+  print(p3)
+  print(p4)
+  print(p5)
+  dev.off()
+  return (filename)
+}

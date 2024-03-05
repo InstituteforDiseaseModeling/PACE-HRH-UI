@@ -60,6 +60,7 @@ viewRunsServer <- function(id, rv, store) {
     redraw <- reactiveVal(FALSE)
     rv_results <- reactiveValues()
     download_filenames <- reactiveVal(NULL)
+    pdf_filenames <- reactiveVal(NULL)
    
     # autoInvalidate <- reactiveTimer(10000)
     observeEvent(input$refreshBtn, {
@@ -121,13 +122,7 @@ viewRunsServer <- function(id, rv, store) {
       }
     })
     
-    
-    observeEvent(input$compare_btn, {
-      shinyjs::show(id=ns("search_msg"), asis = TRUE)
-      selected <- which(selectedRows())
-      print(paste0("selected ", length(selected)))
-      test_selected <- rv$df_history[selected, 'name']
-      
+    combine_selected_data <- function(selected){
       # Check of start/end year is consistent for all data
       if (length(unique(rv$df_history[selected, 'start_year'])) == 1 &
           length(unique(rv$df_history[selected, 'end_year'])) == 1){
@@ -139,7 +134,6 @@ viewRunsServer <- function(id, rv, store) {
         data_is_valid <- FALSE
         session$sendCustomMessage("notify_handler", "Unable to compare different start /end year results!")
       }
-
       if(all(file.exists(file.path(result_root, rv$df_history[selected, 'name'])))){
         filenames <- unique(list.files(file.path(result_root, rv$df_history[selected, 'name']), pattern = "\\.csv$"))
         # filenames <- filenames[filenames != "result.csv"] # exclude results
@@ -157,10 +151,19 @@ viewRunsServer <- function(id, rv, store) {
           name <- tools::file_path_sans_ext(filename)
           rv_results[[name]] <- combined_data
         }
-        redraw(data_is_valid)
       } else{
+        data_is_valid <- FALSE
         session$sendCustomMessage("notify_handler", paste0("results not ready for ", rv$df_history[selected, 'name']))
       }
+      return (data_is_valid)
+    }
+    
+    observeEvent(input$compare_btn, {
+      shinyjs::show(id=ns("search_msg"), asis = TRUE)
+      selected <- which(selectedRows())
+      print(paste0("selected ", length(selected)))
+      test_selected <- rv$df_history[selected, 'name']
+      redraw(combine_selected_data(selected))    
       shinyjs::hide(id=ns("search_msg"), asis = TRUE)
     })
     
@@ -233,5 +236,43 @@ viewRunsServer <- function(id, rv, store) {
         shinyjs::disable(ns("downloadZipBtn"), asis = TRUE)
       }
     })
+    
+    ### handle pdf report
+    observeEvent(input$print_summaryBtn, {
+      shinyjs::show(id=ns("search_msg"), asis = TRUE)
+      selected <- which(selectedRows())
+      test_selected <- rv$df_history[selected, 'name']
+      if(combine_selected_data(selected)){
+        filename1 <- get_pdf_report(rv=rv_results)
+      }
+      pdf_filenames(filename1)
+      shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+      
+      output$downloadBtn <- renderUI({
+        req(pdf_filenames())
+        downloadButton(
+          outputId = ns("downloadPDFBtn"),
+          label = "Download your pdf report here!",
+          onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_pdf_clicked"))
+        )
+      })
+    })
+    
+    output$downloadPDFBtn <- downloadHandler(
+      filename = basename(pdf_filenames()),
+      content = function(file) {
+        file.copy(pdf_filenames(), file)
+      },
+    )
+    
+    observeEvent(input$download_pdf_clicked, {
+      # Hide the download button after it's clicked
+      if (input$download_pdf_clicked){
+        print("summary downloaded. remove the link...")
+        shinyjs::runjs(sprintf('Shiny.setInputValue("%s", false);', ns("download_pdf_clicked")))
+        shinyjs::disable(ns("downloadPDFBtn"), asis = TRUE)
+      }
+    })
+    
   })
 }

@@ -33,9 +33,9 @@ server <- function(input, output,session){
   
   # close the app when session ends
   session$onSessionEnded(function() {
-    # delete all downloaded files on the serverafter session ended
-    zipfiles <- list.files(result_root, full.names = TRUE, pattern ="*.zip")
-    for (file in zipfiles) {
+    # delete all downloaded files on the server after session ended
+    intermediate_files <- list.files(result_root, full.names = TRUE, pattern ="*.zip|*.pdf")
+    for (file in intermediate_files) {
       tryCatch(
         {
           file.remove(file)
@@ -91,7 +91,6 @@ server <- function(input, output,session){
   headerServer("header", store=store)
   footerServer("footer")
 }
-
 
 
 shinyApp(ui=ui, server=server)

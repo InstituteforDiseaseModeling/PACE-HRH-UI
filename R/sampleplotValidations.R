@@ -144,7 +144,7 @@ get_mortality_rates_plot  <- function(rv){
   ymin = min(mortalityrates$delta)*second_y_scalefactor*1.05
   ymax = max(mortalityrates$deaths_per_10k)*1.05
   
-p2 <-   ggplot(data = mortalityrates) +
+  ggplot(data = mortalityrates) +
     geom_point(aes(x = ageband, y = deaths_per_10k), shape = 8, size = 3) +
     geom_text(aes(x = ageband, y = deaths_per_10k, label = paste0(round(deaths_per_10k), " deaths")), vjust = -1) +
     geom_bar(aes(x = ageband, y = delta*second_y_scalefactor), stat = "identity") +
@@ -158,37 +158,44 @@ p2 <-   ggplot(data = mortalityrates) +
     theme(axis.title.y.left = element_text(vjust = 3), axis.title.y.right = element_text(vjust = 3),
           plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "inches")) +
     labs(x = NULL, title = "Mortality rates and annual change in mortality rates, by age groups")
-print(p2)
+
+}
+
+# Validation plot 4: seasonality curves
+get_seasonality_validation_plot <- function(rv){
+  totalpop <- rv$pop_input
+  popvalues <- rv$pop_values
+  seasonalitytable  <- rv$seasonality_input
+  
+  
+  seasonalitytable$Month = factor(seasonalitytable$Month, 
+                                  levels = c("Jan", "Feb", "Mar", "Apr", "May", "June",
+                                             "July", "Aug", "Sept", "Oct", "Nov", "Dec"))
+  seasonalitycurves <- seasonalitytable %>% 
+    pivot_longer(cols = !Month, names_to = "CurveName", values_to = "Seasonality")
+  
+  ggplot(data = seasonalitycurves, aes(x = Month, y = Seasonality)) +
+    geom_point() +
+    ylim(0, NA) +
+    facet_wrap(~CurveName, ncol = 1) +
+    theme_bw() +
+    labs(x = "Month", y = "Seasonality (monthly share of the yearly total)") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+          plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "inches")) 
   
 }
 
-# Specify the path to model inputs Excel file
-input_file <- "config/model_inputs_demo.xlsx"
+get_pdf_report_validation <- function(rv){
+  # print to pdf
+  current_datetime <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
+  filename <- file.path(result_root, paste0("report_", current_datetime, ".pdf"))
+  pdf(file = filename, width = 11, height = 8.5)
+  p1 <- get_mortality_rates_plot(rv)
+  p2 <- et_seasonality_validation_plot(rv)
+  print(p1)
+  print(p2)
+  dev.off()
+  return (filename)
+}
 
-# Import the sheet containing data for Validation plot 1: population pyramid
-totalpop <- read_excel(input_file, sheet = "TotalPop")
-popvalues <- read_excel(input_file, sheet = "PopValues")
 
-# Validation plot 4: seasonality curves
-seasonalitytable <- read_excel(input_file, sheet = "SeasonalityCurves")
-seasonalitytable$Month = factor(seasonalitytable$Month, 
-                                 levels = c("Jan", "Feb", "Mar", "Apr", "May", "June",
-                                           "July", "Aug", "Sept", "Oct", "Nov", "Dec"))
-seasonalitycurves <- seasonalitytable %>% 
-  pivot_longer(cols = !Month, names_to = "CurveName", values_to = "Seasonality")
-
-p1 <- ggplot(data = seasonalitycurves, aes(x = Month, y = Seasonality)) +
-  geom_point() +
-  ylim(0, NA) +
-  facet_wrap(~CurveName, ncol = 1) +
-  theme_bw() +
-  labs(x = "Month", y = "Seasonality (monthly share of the yearly total)") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-        plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "inches")) 
-print(p1)
-
-# print to pdf
-pdf(file = "ValidationPlots1.pdf", width = 11, height = 8.5)
-print(p1)
-print(p2)
-dev.off()
