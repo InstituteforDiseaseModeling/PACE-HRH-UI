@@ -13,7 +13,7 @@ plotTabUI <- function(id=NULL, title=NULL) {
              div(id = ns("wait_msg"), "Generating plot, please wait...", div(class = "spinner"), style = "display: none;"),  # Initially hidden
            ),
            fluidRow(
-             style = "margin: 0 5px;",
+             style = "margin: 0 5px; margin-bottom:60px",
              plotlyOutput(ns("plot"),),
              
              # div(class="visual-placeholder-xl")

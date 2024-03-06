@@ -56,7 +56,7 @@ sim_tabs <- function(ns){
                     #   align = "left",
                     #   modifyValueOnWheel = TRUE
                     # ),
-                    numericInput(ns("hrh_utilization"), "Target HRH utilization", value=1.0, min=0, max =1, step = 0.01,)      
+                    numericInput(ns("hrh_utilization"), "Target HRH utilization (%)", value=100, min=0, max =100, step = 1,)      
              )
            ),
            fluidRow(
@@ -91,7 +91,7 @@ sim_tabs <- function(ns){
            fluidRow(column(12, uiOutput(ns("runSimMsg")))
                     ),
            fluidRow(
-             column(12,  HTML("<br><br>"))
+             column(12,  HTML("<br>"))
            ),
            fluidRow(column(12, 
                            hidden(div(id="sim_logger_area",loggerUI("logger"))),
@@ -128,7 +128,7 @@ runSimulationUI <- function(id) {
       fluidRow(column(12, HTML("<br>"))
       ),
       fluidRow(
-        column(3, offset=9, div(id=ns("skipAll"), actionButton(ns("skipBtn"), "Skip To Run Simulation"), align="center")),
+        column(3, offset=9, div(id=ns("skipAll"), actionButton(ns("skipBtn"), "Skip To Run Simulation"), align="center"),style="margin-bottom: 100px;"),
         bsTooltip(ns("skipBtn"), "Proceed directly to run simulation, Warning: Unchecked inputs may have problems.",
                   "left", options = list(container = "body"))
       ),
@@ -160,12 +160,12 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       }
       
       # reformat hrh utilization
-      formatted_value <- sprintf("%.2f", input$hrh_utilization)
-      isolate(updateNumericInput(session, 
-                                 "hrh_utilization", 
-                                 value= sprintf("%.2f", input$hrh_utilization)
-                                 )
-              )
+      # formatted_value <- sprintf("%.2f", input$hrh_utilization)
+      # isolate(updateNumericInput(session, 
+      #                            "hrh_utilization", 
+      #                            value= sprintf("%.2f", input$hrh_utilization)
+      #                            )
+      #         )
       if(sim_pages[rv$page]=="Configuration"){
         if(!rv$show_region){
           isolate(updateSelectInput(session, "region", label = "Region (Unavailable)"))
@@ -274,7 +274,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         rv$end_year <- input$end_year
         rv$scenarios_input$BaselinePop <- input$catchment_pop
         rv$scenarios_input$HrsPerWeek <- input$hrs_wk
-        rv$scenarios_input$MaxUtilization <- input$hrh_utilization
+        rv$scenarios_input$MaxUtilization <- (input$hrh_utilization) /100.0
         rv$scenarios_input$DeliveryModel <- ifelse(is.null(rv$scenarios_input$DeliveryModel), "Basic", rv$scenarios_input$DeliveryModel)
         rv$region <- input$region
         print(rv$scenarios_input)

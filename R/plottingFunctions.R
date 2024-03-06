@@ -267,7 +267,7 @@ get_pdf_report <- function(rv){
   p2 <- byServiceCat_plot(rv, plotly = FALSE)
   p3 <- byServiceTile_plot(rv)
   p4 <- serviceOverTime_plot(rv, plotly = FALSE)
-  p5 <- seasonality_plot(rv)
+  p5 <- seasonality_plot(rv, plotly = FALSE)
   print(p1)
   print(p2)
   print(p3)

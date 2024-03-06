@@ -254,8 +254,10 @@ ul.navbar-nav{
 .menuButton {
   display: block;
   width: 80%;
-  height: 120px;
-  margin: auto;
+  max-height: 120px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
   border: 3px solid grey;
   padding: 10px;
   text-align: center;
@@ -263,8 +265,12 @@ ul.navbar-nav{
 }
 
 .sim_row {
-  height: 410px
+  max-height: 400px
+  margin-left: auto;
+  margin-right: auto
+  margin-bottom: 20px;
 }
+
 
 .spinner {
     border: 6px solid #f3f3f3;
@@ -282,6 +288,7 @@ ul.navbar-nav{
 .plots {
   width: 73%;
   margin: 0 auto;
+  margin-bottom: 60px;
 }
 
 .center {
@@ -324,4 +331,5 @@ ul.navbar-nav{
 .download-button:disabled {
   background-color: #cccccc; /* Light gray */
   cursor: not-allowed;
+  opacity: 0;
 }

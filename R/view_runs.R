@@ -202,8 +202,8 @@ viewRunsServer <- function(id, rv, store) {
     ### handle download
     
     before_download <- function(){
-      shinyjs::disable(ns("downloadZipBtn"), asis = TRUE)
-      shinyjs::disable(ns("downloadPDFBtn"), asis = TRUE)
+      shinyjs::hide(ns("downloadZipBtn"), asis = TRUE)
+      shinyjs::hide(ns("downloadPDFBtn"), asis = TRUE)
       shinyjs::show(id=ns("search_msg"), asis = TRUE)
     }
     
@@ -225,7 +225,7 @@ viewRunsServer <- function(id, rv, store) {
           class = "download-button"
         )
       })
-      shinyjs::enable(ns("downloadZipBtn"), asis = TRUE)
+      shinyjs::show(ns("downloadZipBtn"), asis = TRUE)
     })
     
     output$downloadZipBtn <- downloadHandler(
@@ -240,7 +240,8 @@ viewRunsServer <- function(id, rv, store) {
       if (input$download_clicked){
         print("downloaded. remove the link...")
         shinyjs::runjs(sprintf('Shiny.setInputValue("%s", false);', ns("download_clicked")))
-        shinyjs::disable(ns("downloadZipBtn"), asis = TRUE)
+        shinyjs::hide(ns("downloadZipBtn"), asis = TRUE)
+        shinyjs::hide(ns("downloadPDFBtn"), asis = TRUE)
       }
     })
     
@@ -260,11 +261,11 @@ viewRunsServer <- function(id, rv, store) {
         downloadButton(
           outputId = ns("downloadPDFBtn"),
           label = "Download your pdf report here!",
-          onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_pdf_clicked")),
+          onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
           class = "download-button"
         )
       })
-      shinyjs::enable(ns("downloadPDFBtn"), asis = TRUE)
+      shinyjs::show(ns("downloadPDFBtn"), asis = TRUE)
     })
     
     output$downloadPDFBtn <- downloadHandler(
@@ -273,15 +274,6 @@ viewRunsServer <- function(id, rv, store) {
         file.copy(pdf_filenames(), file)
       },
     )
-    
-    observeEvent(input$download_pdf_clicked, {
-      # Hide the download button after it's clicked
-      if (input$download_pdf_clicked){
-        print("summary downloaded. remove the link...")
-        shinyjs::runjs(sprintf('Shiny.setInputValue("%s", false);', ns("download_pdf_clicked")))
-        shinyjs::disable(ns("downloadPDFBtn"), asis = TRUE)
-      }
-    })
     
   })
 }
