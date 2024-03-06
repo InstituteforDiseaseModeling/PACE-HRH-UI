@@ -122,13 +122,13 @@ runSimulationUI <- function(id) {
                              actionButton(ns("prevBtn"), "Previous"), align="center"))),
         column(8, HTML("<br>")),
         column(2, div(id = ns("nextDiv"), 
-                      actionButton(ns("nextBtn"), "Next"), align="center")),
+                      actionButton(ns("nextBtn"), "Next"), align="right")),
       ),
 
       fluidRow(column(12, HTML("<br>"))
       ),
       fluidRow(
-        column(3, offset=9, div(id=ns("skipAll"), actionButton(ns("skipBtn"), "Skip To Run Simulation"), align="center"),style="margin-bottom: 100px;"),
+        column(3, offset=9, div(id=ns("skipAll"), actionButton(ns("skipBtn"), "Skip To Run Simulation"), align="right"),style="margin-bottom: 100px;"),
         bsTooltip(ns("skipBtn"), "Proceed directly to run simulation, Warning: Unchecked inputs may have problems.",
                   "left", options = list(container = "body"))
       ),
@@ -233,7 +233,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       
       output$step_title <- renderUI({
         image_filename <- paste0("assets/step", rv$page, ".png")
-        img(src = image_filename, width = "600px", height = "150px", class="center")
+        img(src = image_filename, width = "600px", height = "150px", class="center_icon")
         # HTML(paste0("<h2>", sim_pages[rv$page], "</h2>"))
       })
     })
@@ -286,6 +286,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       save_values()
       if (rv$page >= which(sim_pages == "Run Simulation")) {
         return_event(TRUE)
+        rv$sim_refresh <- TRUE
         navPage(0, restart=TRUE)
       }
       else{

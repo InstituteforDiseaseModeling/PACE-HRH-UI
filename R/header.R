@@ -69,6 +69,7 @@ headerServer <- function(id, store=NULL) {
                        scenarios_sheet = "Scenarios",
                        folder_df = NULL,
                        selected_config_path = NULL,
+                       sim_refresh =TRUE
   )
  
   moduleServer(id, function(input, output, session) {

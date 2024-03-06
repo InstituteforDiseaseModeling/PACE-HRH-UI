@@ -17,7 +17,7 @@ viewRunsUI <- function(id) {
              tagList(
                 # selectInput(ns("run_selector"), "Choose a Run To view", choices =NULL),
                 dataTableOutput(ns("history_table")),
-                actionButton(ns("refreshBtn"), "Refresh Results"),
+                # actionButton(ns("refreshBtn"), "Refresh Results"),
                 actionButton(ns("compare_btn"), "Show / Compare Result"),
                 actionButton(ns("download_resultsBtn"), "Download Results (.csv)", ),
                 actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots")
@@ -63,14 +63,14 @@ viewRunsServer <- function(id, rv, store) {
     pdf_filenames <- reactiveVal(NULL)
    
     # autoInvalidate <- reactiveTimer(10000)
-    observeEvent(input$refreshBtn, {
-      # autoInvalidate()
-      shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("test_names_loaded"), ns("test_history")))
-      isolate(updateSelectInput(session, "run_selector",
-                        label = "Choose a Run To view",
-                        choices = input$test_names_loaded,
-      ))
-    })
+    # observeEvent(input$refreshBtn, {
+    #   # autoInvalidate()
+    #   shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("test_names_loaded"), ns("test_history")))
+    #   isolate(updateSelectInput(session, "run_selector",
+    #                     label = "Choose a Run To view",
+    #                     choices = input$test_names_loaded,
+    #   ))
+    # })
     
     observeEvent(input$test_history, {
       df_history <- jsonlite::fromJSON(input$test_history)
@@ -168,6 +168,16 @@ viewRunsServer <- function(id, rv, store) {
     })
     
     observe ({
+        if (rv$sim_refresh){
+          print(paste0("rv$sim_refresh: ", rv$sim_refresh))
+          shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("test_names_loaded"), ns("test_history")))
+          isolate(updateSelectInput(session, "run_selector",
+                                    label = "Choose a Run To view",
+                                    choices = input$test_names_loaded,
+          ))
+          rv$sim_refresh <- FALSE   
+        }
+      
         if (redraw()){
           plotTabServer(
             id = "slide-4-tab",
