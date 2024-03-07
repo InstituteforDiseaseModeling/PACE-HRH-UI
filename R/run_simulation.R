@@ -424,7 +424,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           if (!is.null(rv$sim_triggered) && rv$sim_triggered == TRUE) loggerServer("logger", paste0(rv$input_file, " saved"))
           
           # save scenario sheet
-          scenario_sheet <- read.xlsx(rv$input_file, sheet = rv$scenarios_sheet)
+          scenario_sheet <- read_xlsx(rv$input_file, sheet = rv$scenarios_sheet)
           scenario_sheet$HrsPerWeek[1] <- rv$scenarios_input$HrsPerWeek
           scenario_sheet$MaxUtilization[1] <- rv$scenarios_input$MaxUtilization
           scenario_sheet$BaselinePop[1] <- rv$scenarios_input$BaselinePop
