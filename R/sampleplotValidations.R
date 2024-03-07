@@ -64,13 +64,13 @@ get_population_pyramid_plot <- function(rv){
   
   ggplot() +
     geom_bar(data = pop_by_group, aes(x = popLabel, y = pct_plot, fill = Gender), stat = "identity") +
-    geom_text(data = pop_by_group[pop_by_group$Gender=="Female",], aes(x = popLabel, label = paste0(abs(round(pct_plot*100,0)), "%"), y = pct_plot), color = "grey50", hjust = -0.5) +
-    geom_text(data = pop_by_group[pop_by_group$Gender=="Male",], aes(x = popLabel, label = paste0(abs(round(pct_plot*100,0)), "%"), y = pct_plot), color = "grey50", hjust = 1.5) +
+    geom_text(data = pop_by_group[pop_by_group$Gender=="Female",], aes(x = popLabel, label = paste0(abs(round(pct_plot*100,1)), "%"), y = pct_plot), color = "grey50", hjust = -0.5) +
+    geom_text(data = pop_by_group[pop_by_group$Gender=="Male",], aes(x = popLabel, label = paste0(abs(round(pct_plot*100,1)), "%"), y = pct_plot), color = "grey50", hjust = 1.5) +
     ylim(ymin, ymax) +
     coord_flip() + 
     theme_minimal() +
     theme(axis.text.x = element_blank()) +
-    labs(y = "percentage of total population", x = "Population age group")
+    labs(y = "percentage of total population, initial year", x = "Age group")
   
   
 }
@@ -90,17 +90,19 @@ get_fertility_rates_plot <- function(rv){
                   births_per_thousand = InitValue*second_y_scalefactor) 
   
   ggplot() +
-    geom_point(data = fertilityrates, aes(x = ageband, y = births_per_thousand), shape = 8, size = 3) +
-    geom_text(data = fertilityrates, aes(x = ageband, y = births_per_thousand, label = paste0(births_per_thousand, " births")), vjust = -1) +
-    geom_bar(data = fertilityrates, aes(x = ageband, y = delta*second_y_scalefactor), stat = "identity") +
+    geom_point(data = fertilityrates, aes(x = ageband, y = births_per_thousand), shape = 8, size = 3, color="darkgreen") +
+    geom_text(data = fertilityrates, aes(x = ageband, y = births_per_thousand, label = paste0(births_per_thousand, " per 1k")), vjust = -1) +
+    geom_bar(data = fertilityrates, aes(x = ageband, y = delta*second_y_scalefactor), stat = "identity", fill="darkblue") +
     geom_text(data = fertilityrates, aes(x = ageband, y = delta*second_y_scalefactor, label = paste0(round((delta*100),1), "%")), vjust = 1.5) +
+    geom_hline(yintercept=0) +
     scale_x_discrete(guide = guide_axis(position = "top")) +
-    scale_y_continuous(name = paste0("Number of births per ", second_y_scalefactor, " people in the age group"), 
-                       sec.axis = sec_axis(~./second_y_scalefactor, name = "year-on-year rate of change on fertility rates, by the age group")) +
+    scale_y_continuous(name = paste0("Number of births per ", second_y_scalefactor, " people in group"), 
+                       sec.axis = sec_axis(~./second_y_scalefactor, labels = scales::label_percent(),
+                                           name = "annual rate of change of fertility rates")) +
     theme_bw() +
-    theme(axis.title.y.left = element_text(vjust = 2), 
-          axis.title.y.right = element_text(vjust = 2)) +
-    labs(x = NULL, title = "Fertility rates and annual change in fertility rates, by age groups")
+    theme(axis.title.y.left = element_text(vjust = 2,color="darkgreen"), 
+          axis.title.y.right = element_text(vjust = 2,color="darkblue")) +
+    labs(x = NULL)
   
   
 }
@@ -114,50 +116,43 @@ get_mortality_rates_plot  <- function(rv){
   second_y_scalefactor <-  10000
   mortalityrates <- popvalues %>% 
     filter(Type == "Mortality") %>% 
-    dplyr::mutate(ageband = paste0(SexLabel, ",\n", "Ages ", BandStart, "-", BandEnd)) %>% 
+    dplyr::mutate(ageband = paste0("Ages ", BandStart, "-", BandEnd)) %>% 
     dplyr::mutate(delta = ChangeRate -1,
                   deaths_per_10k = InitValue*second_y_scalefactor)
-  mortalityrates[mortalityrates$Sex=="F" & mortalityrates$BandStart==0,]$ageband = paste0("Female", ",\n", "infants") 
-  mortalityrates[mortalityrates$Sex=="M" & mortalityrates$BandStart==0,]$ageband = paste0("Male", ",\n", "infants") 
-  mortalityrates$ageband = factor(mortalityrates$ageband, levels = c(paste0("Female", ",\n", "infants"), 
-                                                                     paste0("Male", ",\n", "infants"), 
-                                                                     paste0("Female", ",\n", "Ages 1-4"), 
-                                                                     paste0("Male", ",\n", "Ages 1-4"),
-                                                                     paste0("Female", ",\n", "Ages 5-9"), 
-                                                                     paste0("Male", ",\n", "Ages 5-9"),
-                                                                     paste0("Female", ",\n", "Ages 10-14"), 
-                                                                     paste0("Male", ",\n", "Ages 10-14"),
-                                                                     paste0("Female", ",\n", "Ages 15-19"), 
-                                                                     paste0("Male", ",\n", "Ages 15-19"),
-                                                                     paste0("Female", ",\n", "Ages 20-34"), 
-                                                                     paste0("Male", ",\n", "Ages 20-34"),
-                                                                     paste0("Female", ",\n", "Ages 35-49"), 
-                                                                     paste0("Male", ",\n", "Ages 35-49"),
-                                                                     paste0("Female", ",\n", "Ages 50-59"), 
-                                                                     paste0("Male", ",\n", "Ages 50-59"),
-                                                                     paste0("Female", ",\n", "Ages 60-74"), 
-                                                                     paste0("Male", ",\n", "Ages 60-74"),
-                                                                     paste0("Female", ",\n", "Ages 75-100"), 
-                                                                     paste0("Male", ",\n", "Ages 75-100")))
+  mortalityrates[mortalityrates$Sex=="F" & mortalityrates$BandStart==0,]$ageband = paste0("infants") 
+  mortalityrates[mortalityrates$Sex=="M" & mortalityrates$BandStart==0,]$ageband = paste0("infants") 
+  mortalityrates$ageband = factor(mortalityrates$ageband, levels = c(paste0("infants"), 
+                                                                     paste0("Ages 1-4"), 
+                                                                     paste0("Ages 5-9"), 
+                                                                     paste0("Ages 10-14"), 
+                                                                     paste0("Ages 15-19"), 
+                                                                     paste0("Ages 20-34"), 
+                                                                     paste0("Ages 35-49"),
+                                                                     paste0("Ages 50-59"),
+                                                                     paste0("Ages 60-74"),
+                                                                     paste0("Ages 75-100")))
   
   ## choose y-limits for plot to display properly
-  ymin = min(mortalityrates$delta)*second_y_scalefactor*1.05
-  ymax = max(mortalityrates$deaths_per_10k)*1.05
+  ymin = min(mortalityrates$delta)*second_y_scalefactor*1.12
+  ymax = max(mortalityrates$deaths_per_10k)*1.12
   
   ggplot(data = mortalityrates) +
-    geom_point(aes(x = ageband, y = deaths_per_10k), shape = 8, size = 3) +
-    geom_text(aes(x = ageband, y = deaths_per_10k, label = paste0(round(deaths_per_10k), " deaths")), vjust = -1) +
-    geom_bar(aes(x = ageband, y = delta*second_y_scalefactor), stat = "identity") +
-    geom_text(aes(x = ageband, y = delta*second_y_scalefactor, label = paste0(round((delta*100),1), "%")), vjust = 1.5) +
+    geom_point(aes(x = ageband, y = deaths_per_10k), shape = 8, size = 3, color="darkgreen") +
+    geom_text(aes(x = ageband, y = deaths_per_10k, label = paste0(round(deaths_per_10k), " per 10k")), vjust = -1, size=3) +
+    geom_bar(aes(x = ageband, y = delta*second_y_scalefactor), stat = "identity", fill="darkblue") +
+    geom_text(aes(x = ageband, y = delta*second_y_scalefactor, label = paste0(round((delta*100),1), "%")), vjust = 1.5, size=3) +
+    geom_hline(yintercept=0) + 
     scale_x_discrete(guide = guide_axis(position = "top")) +
-    scale_y_continuous(name = paste0("Number of deaths per ", second_y_scalefactor, " population base in the age group"),
+    scale_y_continuous(name = paste0("Number of deaths per ", second_y_scalefactor, " people in group"),
                        limits = c(ymin, ymax),
-                       sec.axis = sec_axis(~./second_y_scalefactor, name = "year-on-year rate of change on mortality rates, by age group")) +
-    facet_wrap(~ SexLabel, scales = "free_x", ncol = 1) +
+                       sec.axis = sec_axis(~./second_y_scalefactor, labels = scales::label_percent(),
+                                           name = "annual rate of change of mortality rates")) +
+    facet_wrap(~ SexLabel, ncol = 1) +
     theme_bw() +
-    theme(axis.title.y.left = element_text(vjust = 3), axis.title.y.right = element_text(vjust = 3),
+    theme(axis.title.y.left = element_text(vjust = 3, color="darkgreen"), 
+          axis.title.y.right = element_text(vjust = 3, color="darkblue"),
           plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "inches")) +
-    labs(x = NULL, title = "Mortality rates and annual change in mortality rates, by age groups")
+    labs(x = NULL)
 
 }
 
@@ -174,14 +169,19 @@ get_seasonality_validation_plot <- function(rv){
   seasonalitycurves <- seasonalitytable %>% 
     pivot_longer(cols = !Month, names_to = "CurveName", values_to = "Seasonality")
   
+  ymax = max(seasonalitycurves$Seasonality,na.rm=TRUE) * 1.1
+  
   ggplot(data = seasonalitycurves, aes(x = Month, y = Seasonality)) +
-    geom_point() +
-    ylim(0, NA) +
+    geom_bar(stat="identity") +
+    geom_text(aes(x = Month, y = Seasonality + .02, label=paste0(round(Seasonality,2)*100,"%")), size = 3) + 
+    ylim(0, ymax) +
     facet_wrap(~CurveName, ncol = 1) +
     theme_bw() +
-    labs(x = "Month", y = "Seasonality (monthly share of the yearly total)") +
+    labs(x = "", y = "monthly percent of total yearly burden") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-          plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "inches")) 
+          plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "inches")) +
+    geom_hline(yintercept=1/12,linetype="dashed",color="darkgrey") + 
+    scale_y_continuous(labels = scales::label_percent())
   
 }
 
