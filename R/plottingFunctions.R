@@ -87,10 +87,11 @@ get_slide_4_plot <- function(rv, plotly=TRUE){
     ylim(0,maxyval)+
     theme_bw()+
     scale_x_continuous(breaks = seq(StartYear,EndYear))+
-    theme(legend.title=element_blank(),axis.text.x = element_text(angle=-90, vjust = .5, hjust=1))+
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1))+
+    labs(fill=" ")+
     scale_fill_viridis_d()+
     facet_wrap(~Scenario_label)+
-    ylab(ylabel) + xlab("") + labs(title = paste("Time Allocation by Clinical Category"))
+    ylab(ylabel) + xlab("")
   
   if(plotly){
     ggplotly(plot)
@@ -126,12 +127,12 @@ byServiceCat_plot <- function(rv, plotly=TRUE){
     geom_errorbar(data=temp_TotClin,aes(x=Year,ymin=CI05/WeeksPerYr, ymax=CI95/WeeksPerYr), colour="black", width=.3)+
     ylim(0, ymax) +
     facet_wrap(~Scenario_label) +
-    scale_x_continuous(breaks =  c(2021,2025, 2030, 2035))+
-    theme(legend.title=element_blank(),legend.position = c(0.02, 1), legend.justification = c(0.02, 1), 
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1))+
+    theme(legend.position = c(0.02, 1), legend.justification = c(0.02, 1), 
           legend.key.size=unit(0.3, 'cm'), legend.direction="vertical", legend.background = element_rect(fill = 'transparent'))+
-    #theme(legend.title=element_blank(),axis.text.x = element_text(angle=-90, vjust = .5, hjust=1))+
+    labs(fill=" ")+
     scale_fill_brewer(palette = "BrBG", direction = -1)+
-    labs(x="Year", y="Hours per Week per Catchment Pop")
+    labs(x="", y="Hours per Week per Catchment Pop")
   
   if(plotly){
     ggplotly(plot)
@@ -164,7 +165,8 @@ byServiceTile_plot <- function(rv){
     geom_treemap_subgroup_border(color="black",size=2.5)+
     facet_wrap(~test_name) +
     theme_bw()+theme(legend.position = "none")+
-    scale_fill_viridis_d()
+    scale_fill_viridis_d()+
+    theme(strip.text = element_text(size = 16))
   
   print(p)
   
@@ -181,26 +183,25 @@ serviceOverTime_plot <- function(rv, plotly=TRUE){
     filter(Year >= StartYear & Year <= EndYear) %>% 
     group_by(test_name, ServiceCat) %>% 
     dplyr::mutate(MeanHrs_Start = dplyr::first(MeanHrs), RatioTo1 = MeanHrs/MeanHrs_Start) %>% 
-    dplyr::mutate(RatioLastYr = case_when(
-      Year == max(Year) ~ RatioTo1)) %>% 
     dplyr::mutate(RatioLabel = case_when(
       Year == max(Year) ~ paste(ServiceCat, round(RatioTo1,1), sep = ","))) 
   ServiceCat_Clinical$ServiceCat = as.factor(ServiceCat_Clinical$ServiceCat)
   
-  yplotmax = max(ServiceCat_Clinical$RatioTo1)*1.02
-  yplotmin = min(ServiceCat_Clinical$RatioTo1)*0.98
+  #yplotmax = max(ServiceCat_Clinical$RatioTo1)*1.02
+  #yplotmin = min(ServiceCat_Clinical$RatioTo1)*0.98
   
-  plot <- ggplot(ServiceCat_Clinical,aes(x=Year,y=RatioTo1,group=ServiceCat) )+
+  plot <- ggplot(ServiceCat_Clinical,aes(x=Year,y=RatioTo1,group=ServiceCat,label=round(RatioTo1,2)) )+
     geom_line(aes(color=ServiceCat),size=1.1) +
-    geom_hline(yintercept = 1,color="black",linetype="dashed") +
+    geom_hline(yintercept = 1,color="black") +
     theme_bw() +
     scale_color_discrete()+
-    geom_text(aes(x=max(Year)+.2,y=RatioLastYr,label=RatioLabel),color="darkgrey",size=3.5, hjust=0, nudge_x = 0.5) +
+    geom_text(data=subset(ServiceCat_Clinical,Year==max(ServiceCat_Clinical$Year))) +
     facet_wrap(~test_name) +
-    scale_x_continuous(breaks = seq(StartYear,EndYear),limits=c(StartYear,max(ServiceCat_Clinical$Year)+6)) +
-    scale_y_continuous(limits = c(yplotmin,yplotmax)) +
-    theme(legend.title = element_blank(), legend.position="bottom",axis.text.x = element_text(angle=-90, vjust = .5, hjust=1)) +
-    labs(x = "", y = "Ratio to Baseline Year")
+    #scale_x_continuous(breaks = seq(StartYear,EndYear),limits=c(StartYear,max(ServiceCat_Clinical$Year)+15)) +
+    #scale_y_continuous(limits = c(yplotmin,yplotmax)) +
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1)) +
+    labs(x = "", y = "Ratio of Workload vs. Baseline Year") + 
+    labs(fill=" ")
   
   if(plotly){
     ggplotly(plot)
@@ -239,11 +240,9 @@ seasonality_plot <- function(rv, plotly=TRUE){
   plot <- ggplot(data=RatioToAvg_ByMonth)+
     theme_bw()+
     geom_ribbon(aes(x = Month, ymin = RatioToMean_p05, ymax = RatioToMean_p95), fill = "#80B1D3",  alpha = 0.25)+
-    #  geom_line(aes(x = Month, y=RatioToMean_p50),linewidth=1)+
     geom_smooth(aes(x = Month, y=RatioToMean_p50), method ="loess", fill = "transparent", span=0.5, alpha = 0.25)+
     geom_hline(yintercept = 1, color = "blue", linetype="dashed")+
     scale_color_manual("#80B1D3")+
-    ylim(0.85, 1.15) +
     scale_x_continuous(breaks =  seq(1, 12))+
     facet_wrap(~test_name)+
     labs(x = "Month", y="Ratio of workload for the month to annual average")
