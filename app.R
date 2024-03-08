@@ -1,7 +1,17 @@
 library(shiny)
 library(shinyStore)
+library(shinyjs)
+library(DT)
 
 ui <- fluidPage(
+                includeCSS("www/css/styles.css"),
+                includeScript("www/js/util.js"),
+                useShinyjs(),
+                tags$script(HTML("
+                  $(document).on('shiny:connected', function(event) {
+                  window.resizeTo(1050, 600); // Use optimal window size
+                  });
+                ")),
                 tags$head(
                   tags$link(rel="shortcut icon", href = "assets/favicon.ico"),
                   tags$link(rel ="stylesheet", type="text/css", href = "css/styles.css"),
@@ -23,6 +33,19 @@ server <- function(input, output,session){
   
   # close the app when session ends
   session$onSessionEnded(function() {
+    # delete all downloaded files on the server after session ended
+    intermediate_files <- list.files(result_root, full.names = TRUE, pattern ="*.zip|*.pdf")
+    for (file in intermediate_files) {
+      tryCatch(
+        {
+          file.remove(file)
+          cat("File", basename(file), "deleted successfully.\n")
+        },
+        error = function(e) {
+          cat("Error Removing file:", e$message, "\n")
+        }
+      )
+    }
     stopApp()
   })
   #---------------------------------------------------
@@ -48,6 +71,7 @@ server <- function(input, output,session){
     removeModal()
     updateStore(session, "greeting_modal_shown", value = "shown")
     message("setting 'greeting_modal_shown' to TRUE")
+    shinyjs::runjs('let r = (Math.random() + 1).toString(36).substring(7); localStorage.setItem("uid", r);')
   })
   
   observeEvent(input$store, {
@@ -67,7 +91,6 @@ server <- function(input, output,session){
   headerServer("header", store=store)
   footerServer("footer")
 }
-
 
 
 shinyApp(ui=ui, server=server)

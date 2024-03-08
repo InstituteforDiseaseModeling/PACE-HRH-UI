@@ -3,13 +3,16 @@ options(Ncpus = parallel::detectCores())
 pkgnames <- c(
 'devtools', 'DT', 'shiny', 'shinyjs', 'shinyalert', 'shinyWidgets', 'shinythemes', 'shinycssloaders', 'plotly', 'truncnorm', 'shinyBS', 'openxlsx', 
 'validate','readxl', 'dplyr','ggplot2', 'tidyr', 'kableExtra', 'stringr', 'plyr', 'reshape2', 'scales', 'glue', 'logr', 'tidyverse', 'showtext',
-'treemapify', 'ggrepel', 'knitr', 'mockr',
-'shinytest2', 'uuid'
+'treemapify', 'knitr', 'mockr',
+'shinytest2', 'uuid','ggrepel'
 )
 
 print(paste0("Install Packages from Cran : ", pkgnames))
 install.packages(pkgnames,
                  repos='http://cran.rstudio.com/')
+
+library(devtools)
+install_github("trestletech/shinyStore")
 
 # Make sure packages are available
 if (length(pkgnames[which (!pkgnames %in% installed.packages()[,'Package'])]) >0 ){

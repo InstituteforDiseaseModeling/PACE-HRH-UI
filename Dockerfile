@@ -12,7 +12,7 @@ COPY .. /srv/shiny-server/
 
 # Install PACE-HRH R package
 WORKDIR /srv/shiny-server
-RUN R -e "devtools::install_local('pacehrh/pacehrh_1.1.0.zip')"
+RUN R -e "devtools::install_github('InstituteforDiseaseModeling/PACE-HRH', subdir='pacehrh')"
 # expose shiny error
 ENV SHINY_LOG_STDERR=1
 EXPOSE 3838
