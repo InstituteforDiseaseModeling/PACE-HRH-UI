@@ -196,8 +196,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
     observeEvent(input$proceedRegionBtn, {
       removeModal()
       rv$current_region <- input$region
-      rv$input_file <- region_config_files[[rv$current_region]]
-      reload_config(rv$uid, rv$input_file)
+      reload_config(rv$uid, region_config_files[[rv$current_region]])
       rv$scenarios_input <- first(read_excel(rv$input_file, sheet = rv$scenarios_sheet))
       # reload optional data
       rv$task_input <- read_excel(rv$input_file, sheet = rv$task_sheet)
