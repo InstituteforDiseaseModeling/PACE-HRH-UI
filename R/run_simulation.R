@@ -171,6 +171,10 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           isolate(updateSelectInput(session, "region", label = "Region (Unavailable)"))
           shinyjs::disable("region")
         }
+        else{
+          isolate(updateSelectInput(session, "region", label = "Region"))
+          shinyjs::enable("region")
+        }
       }
     })
     
