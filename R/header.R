@@ -176,6 +176,7 @@ headerServer <- function(id, store=NULL) {
     
     
     observeEvent(input$view_runs, {
+      rv$sim_refresh <- TRUE
       updateNavbarPage(session, inputId = "header_options", selected = "View Previous Results")
     })
   })

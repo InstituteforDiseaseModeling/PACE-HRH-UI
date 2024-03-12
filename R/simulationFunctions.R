@@ -135,6 +135,9 @@ run_pacehrh_simulation <- function(rv, input_file){
     loggerServer("logger", paste0("Saving config file to : ", save_config_file))
     file.copy(input_file, save_config_file, overwrite = TRUE)
     
+    loggerServer("logger", paste0("Saving run info to : ", file.path(results_dir, "info.txt")))
+    writeLines(rv$run_info, file.path(results_dir, "info.txt"))
+    
   }, error=function(e){
     loggerServer("logger", paste0("Run failed: ", e$message))
     loggerServer("logger", paste0("Please attach the log when reporting the error"), close=TRUE)

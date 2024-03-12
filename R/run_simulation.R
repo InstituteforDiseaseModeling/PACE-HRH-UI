@@ -473,6 +473,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         modalDialog(
           title = "Enter Run Name",
           textInput(ns("runNameInput"), "Run Name:", ""),
+          textAreaInput(ns("runInfo"), "Description"),
           span(textOutput(ns("errorRunName")), style="color:red"),
           footer = tagList(
             modalButton("Cancel"),
@@ -492,11 +493,13 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       }
       else{
         removeModal()
+        output$errorRunName <- renderText({""})
         # Update config again if anything changed before running sim
         shinyjs::show(id="sim_logger_area", asis=TRUE)
         rv$sim_triggered <- TRUE 
         trigger_file_saving(ns)
         rv$run_name <- input$runNameInput
+        rv$run_info <- input$runInfo
       }
     })
     
