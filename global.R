@@ -18,13 +18,6 @@ our_license_text <- paste (project_title,
 
 our_license_link <- project_info[["OurLicenseLink"]][["value"]]
 
-# Install pacehrh package
-if (!requireNamespace("pacehrh", quietly = TRUE)) {
-  devtools::install_github('InstituteforDiseaseModeling/PACE-HRH', 
-                           subdir='pacehrh',  
-                           force = TRUE, 
-                           dependencies = TRUE)
-}
 
 # download sample config
 global_config_file <- "config/model_inputs_demo.xlsx"

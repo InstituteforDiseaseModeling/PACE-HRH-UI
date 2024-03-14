@@ -13,6 +13,13 @@ install.packages(pkgnames,
 
 library(devtools)
 install_github("trestletech/shinyStore")
+# Install pacehrh package
+if (!requireNamespace("pacehrh", quietly = TRUE)) {
+  devtools::install_github('InstituteforDiseaseModeling/PACE-HRH', 
+                           subdir='pacehrh',  
+                           force = TRUE, 
+                           dependencies = TRUE)
+}
 
 # Make sure packages are available
 if (length(pkgnames[which (!pkgnames %in% installed.packages()[,'Package'])]) >0 ){
