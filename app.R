@@ -2,6 +2,7 @@ library(shiny)
 library(shinyStore)
 library(shinyjs)
 library(DT)
+library(bsicons)
 
 ui <- fluidPage(
                 includeCSS("www/css/styles.css"),
