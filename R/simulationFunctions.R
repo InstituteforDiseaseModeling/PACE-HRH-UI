@@ -11,7 +11,7 @@ get_estimated_run_stats <- function (iteration){
   expected_size <- ifelse(expected_size >0 , expected_size, "--.--")
   
   result_text <- sprintf("Given your number of replications, This model will take %s seconds to run, 
-                             The detail result files, if you choose to download them, will be approximately %s mb.", runtime, expected_size)
+                             The detailed result files, if you choose to download them, will be approximately %s mb.", runtime, expected_size)
   result_text
 }
 

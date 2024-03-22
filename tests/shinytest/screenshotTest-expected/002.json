@@ -1,0 +1,38 @@
+{
+  "input": {
+    "continue": 1,
+    "footer-display_licenses": 0,
+    "header-header_options": "View Previous Results",
+    "header-run_previous_config": 0,
+    "header-run_simulation": 0,
+    "header-view_runs": 1,
+    "main-tabs": "By Clinical Category",
+    "sim1-catchment_pop": 10000,
+    "sim1-close_sim_log": 0,
+    "sim1-end_year": 2040,
+    "sim1-hrh_utilization": 100,
+    "sim1-hrs_wk": 40,
+    "sim1-nextBtn": 0,
+    "sim1-num_trials": 100,
+    "sim1-optional_params": 0,
+    "sim1-prevBtn": 0,
+    "sim1-region": "ethiopia",
+    "sim1-run_simBtn": 0,
+    "sim1-simulation_steps": "Configuration",
+    "sim1-skipBtn": 0,
+    "sim1-start_year": 2020,
+    "store": {
+      "greeting_modal_shown": "shown"
+    },
+    "validation": "Population Pyramid",
+    "view_runs1-compare_btn": 0,
+    "view_runs1-download_resultsBtn": 0,
+    "view_runs1-print_summaryBtn": 0
+  },
+  "output": {
+
+  },
+  "export": {
+
+  }
+}

@@ -1,0 +1,34 @@
+name: R Shiny CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    container:
+      image: r-base:4.2.0
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install R packages
+      run: Rscript install_packages.R
+
+    - name: Run shinytest
+      run: |
+        set -e
+        apt-get update
+        apt-get install curl
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        echo y | apt install ./google-chrome-stable_current_amd64.deb
+        R -e "shiny::runApp(port=3838)"
+        sleep 10
+        response=$(curl -s -o /dev/null -w "%{http_code}" "localhost:3838")
+        echo 'response from server:'$response
+        "[ $response != 200 ] && echo \"Error: cannot start shiny\" && exit 1"
+        R -e "shiny::stopApp()"
