@@ -19,7 +19,9 @@ jobs:
         
     - name: Install R packages
       run: Rscript install_packages.R
-    
+      env:
+        GITHUB_PAT: ${{ secrets.GIT_TOKEN }}   
+        
     - name: Start Shiny App in Background
       run: |
         $RScript = {R -e "shiny::runApp(port=3838)"}
@@ -42,6 +44,4 @@ jobs:
       run: |
         $RScript = {R -e "shiny::stopApp()"}
         Start-Job -ScriptBlock $RScript
-      shell: pwsh
-      env:
-        GITHUB_PAT: ${{ secrets.GIT_TOKEN }}       
+      shell: pwsh    
