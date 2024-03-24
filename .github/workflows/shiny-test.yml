@@ -24,8 +24,7 @@ jobs:
         
     - name: Start Shiny App in Background
       run: |
-        $RScript = {R -e "shiny::runApp(port=3838)"}
-        Start-Job -ScriptBlock $RScript
+        Start-Process Rscript.exe -ArgumentList '-e "shiny::runApp(port=3838)"' -WindowStyle Hidden
         Start-Sleep -Seconds 10  # Wait a bit to ensure the app has started
       shell: pwsh
 
@@ -42,6 +41,5 @@ jobs:
     
     - name: Stop Shiny App
       run: |
-        $RScript = {R -e "shiny::stopApp()"}
-        Start-Job -ScriptBlock $RScript
+        Start-Process Rscript.exe -ArgumentList '-e "shiny::stopApp()"' -WindowStyle Hidden
       shell: pwsh    
