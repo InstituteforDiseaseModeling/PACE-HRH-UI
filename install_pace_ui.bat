@@ -123,14 +123,14 @@ IF EXIST "%R_PATH%" (
 
     ECHO Installing R...
     :: Run the installer silently
-    %DOWNLOAD_R_PATH% /VERYSILENT /NORESTART /DIR="%SHINY_DIR%\R-4.2.2"
+    %DOWNLOAD_R_PATH% /VERYSILENT /NORESTART /DIR="%APP_DIR%\%WORKING_DIR%\R-4.2.2"
 
     ECHO R 4.2.2 installation complete.
 
     ECHO Install packages...
     :: Run the R script in silent mode
    
-    %R_PATH% --vanilla "%SHINY_DIR%\install_packages.R"
+    %R_PATH% --vanilla "%APP_DIR%\%WORKING_DIR%\install_packages.R"
 )
 
 :app
