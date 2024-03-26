@@ -32,7 +32,11 @@ To install the app in a separate environment:
 <br>
 Run `install_pace_ui.bat` which will give you a step by step guide for installation and running the app
 <br>
-
+Once installed on your desired folder, for future use, you should go to the subfolder with name PACE-HRH-UI-{version} and run the install_pace_ui.bat from there, 
+this will start the app and open your default browser so that you can interact with it. To close the app, simply press any key on the batch script window.
+<br>
+You can zip this self-contained folder and send it to those who do not have internet access, they should be able to run without installation.
+<br>
 
 ### Screenshots
 
