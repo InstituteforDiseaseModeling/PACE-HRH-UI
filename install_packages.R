@@ -13,12 +13,13 @@ install.packages(pkgnames,
                  type='binary')
 
 library(devtools)
-install_github("trestletech/shinyStore")
+install_github("trestletech/shinyStore", upgrade="never")
 # Install pacehrh package
 install_github('InstituteforDiseaseModeling/PACE-HRH', 
-                           subdir='pacehrh',  
-                           force = TRUE, 
-                           dependencies = TRUE)
+               subdir='pacehrh',  
+               force = TRUE, 
+               dependencies = TRUE, 
+               upgrade="never")
 
 
 # Make sure packages are available
