@@ -13,7 +13,7 @@ IF EXIST ".git" (
 
 
 :: Determine if this is offline mode
-SET "OFFLINE_FOLDERS=R4.2.2 R config"
+SET "OFFLINE_FOLDERS=R-4.2.2 R config"
 SET offline=TRUE
 FOR %%F IN (%OFFLINE_FOLDERS%) DO (
     IF NOT EXIST "%%F\" (
@@ -22,6 +22,9 @@ FOR %%F IN (%OFFLINE_FOLDERS%) DO (
 )
 IF %offline%==TRUE (
    ECHO All folders exist. No instllation needed.
+   SET R_PATH=.\R-4.2.2\bin\Rscript.exe
+   SET SHINY_DIR=.
+   GOTO app
 ) ELSE (
     ECHO You cannot run it with offline mode.
     GOTO prompt
@@ -105,6 +108,7 @@ ECHO You have accepted the terms.
 POPD
 
 SET R_PATH="%APP_DIR%\%WORKING_DIR%\R-4.2.2\bin\Rscript.exe"
+SET SHINY_DIR="%APP_DIR%\%WORKING_DIR%"
 
 :: Check if R is installed
 SET DOWNLOAD_R_PATH="%root_dir%\R-4.2.2-win.exe"
@@ -119,22 +123,24 @@ IF EXIST "%R_PATH%" (
 
     ECHO Installing R...
     :: Run the installer silently
-    %DOWNLOAD_R_PATH% /VERYSILENT /NORESTART /DIR="%APP_DIR%\%WORKING_DIR%\R-4.2.2"
+    %DOWNLOAD_R_PATH% /VERYSILENT /NORESTART /DIR="%SHINY_DIR%\R-4.2.2"
 
     ECHO R 4.2.2 installation complete.
 
     ECHO Install packages...
     :: Run the R script in silent mode
    
-    %R_PATH% --vanilla "%APP_DIR%\%WORKING_DIR%\install_packages.R"
+    %R_PATH% --vanilla "%SHINY_DIR%\install_packages.R"
 )
 
+:app
 :: Start The shinyapps in port 8888 and open the browser
 SET PORT=8888
 
 ECHO Starting Shiny app on port %PORT%...
-set "APP_Path=%APP_DIR:\=/%"
-START /MIN "" "%R_PATH%" -e "shiny::runApp(appDir='%APP_Path%/%WORKING_DIR%', port=%PORT%, launch.browser=FALSE)"
+ECHO Using %R_PATH% ON %SHINY_DIR%
+
+START /MIN "" %R_PATH% -e "shiny::runApp(appDir='%SHINY_DIR%', port=%PORT%, launch.browser=FALSE)"
 
 :: Wait for a few seconds to ensure the Shiny app has started
 ECHO Wait for 5 seconds for app launching ...
@@ -161,6 +167,3 @@ ECHO Terminating the Shiny app...
 TASKKILL /IM Rscript.exe /f 2>nul
 
 ECHO PACE-HRH app terminated.
-
-
-
