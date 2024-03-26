@@ -8,6 +8,7 @@ IF EXIST ".git" (
     ECHO You are in a Git repository, please follow ReadMe Instruction to run app in Rstudio
     ECHO Press any key to terminate...
     PAUSE > nul
+    exit
 ) 
 
 
