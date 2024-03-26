@@ -1,0 +1,45 @@
+name: R Shiny CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup R
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: '4.2'
+        
+    - name: Install R packages
+      run: Rscript install_packages.R
+      env:
+        GITHUB_PAT: ${{ secrets.GIT_TOKEN }}   
+        
+    - name: Start Shiny App in Background
+      run: |
+        Start-Process Rscript.exe -ArgumentList '-e "shiny::runApp(port=3838)"' -WindowStyle Hidden
+        Start-Sleep -Seconds 10  # Wait a bit to ensure the app has started
+      shell: pwsh
+
+    - name: Check if Shiny App is Up
+      run: |
+        $response = (Invoke-WebRequest -Uri http://localhost:3838 -UseBasicParsing).StatusCode
+        if ($response -eq 200) {
+          Write-Host "Shiny app is up and running."
+        } else {
+          Write-Error "Shiny app is not responding as expected."
+          exit 1
+        }
+      shell: pwsh
+    
+    - name: Stop Shiny App
+      run: |
+        Start-Process Rscript.exe -ArgumentList '-e "shiny::stopApp()"' -WindowStyle Hidden
+      shell: pwsh    

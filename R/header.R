@@ -32,7 +32,7 @@ headerUI <- function(id) {
           actionButton(ns("run_simulation"), "Run new simulation", class='menuButton'),
           tags$br(),
           tags$br(),
-          actionButton(ns("run_previous_config"), "Run from previous config", class='menuButton'),
+          actionButton(ns("run_previous_config"), "Run from previous configuration", class='menuButton'),
           tags$br(),
           tags$br(),
           actionButton(ns("view_runs"), "View previous runs", class='menuButton'),

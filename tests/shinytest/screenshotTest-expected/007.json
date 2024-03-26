@@ -1,0 +1,105 @@
+{
+  "input": {
+    "continue": 1,
+    "footer-display_licenses": 0,
+    "header-header_options": "Run Simulation",
+    "header-run_previous_config": 0,
+    "header-run_simulation": 1,
+    "header-view_runs": 1,
+    "main-tabs": "By Clinical Category",
+    "sim1-cancelDataChange": 0,
+    "sim1-catchment_pop": 10000,
+    "sim1-close_sim_log": 0,
+    "sim1-end_year": 2040,
+    "sim1-file_pop": null,
+    "sim1-file_seasonality": null,
+    "sim1-file_task": null,
+    "sim1-hrh_utilization": 100,
+    "sim1-hrs_wk": 40,
+    "sim1-nextBtn": 0,
+    "sim1-num_trials": 100,
+    "sim1-optional_params": 1,
+    "sim1-preload_pop": "Choose",
+    "sim1-prevBtn": 2,
+    "sim1-region": "ethiopia",
+    "sim1-run_simBtn": 0,
+    "sim1-saveValue": 0,
+    "sim1-simulation_steps": "Configuration",
+    "sim1-skipBtn": 1,
+    "sim1-start_year": 2020,
+    "sim1-tabset_optional_data": "Population Pyramid",
+    "store": {
+      "greeting_modal_shown": "shown"
+    },
+    "validation": "Population Pyramid",
+    "view_runs1-compare_btn": 0,
+    "view_runs1-download_resultsBtn": 0,
+    "view_runs1-print_summaryBtn": 0
+  },
+  "output": {
+    "sim1-preview_pop": {
+      "x": null,
+      "evals": [
+
+      ],
+      "jsHooks": [
+
+      ],
+      "deps": [
+        {
+          "name": "jquery",
+          "version": "3.6.0",
+          "src": {
+            "href": "jquery-3.6.0"
+          },
+          "meta": null,
+          "script": "jquery-3.6.0.min.js",
+          "stylesheet": null,
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        },
+        {
+          "name": "dt-core",
+          "version": "1.13.4",
+          "src": {
+            "href": "dt-core-1.13.4"
+          },
+          "meta": null,
+          "script": "js/jquery.dataTables.min.js",
+          "stylesheet": [
+            "css/jquery.dataTables.min.css",
+            "css/jquery.dataTables.extra.css"
+          ],
+          "head": null,
+          "attachment": null,
+          "package": null,
+          "all_files": false
+        },
+        {
+          "name": "crosstalk",
+          "version": "1.2.0",
+          "src": {
+            "href": "crosstalk-1.2.0"
+          },
+          "meta": null,
+          "script": "js/crosstalk.min.js",
+          "stylesheet": "css/crosstalk.min.css",
+          "head": null,
+          "attachment": null,
+          "all_files": true
+        }
+      ]
+    },
+    "sim1-run_estimate": "Given your number of replications, This model will take 1000 seconds to run, \n                             The detailed result files, if you choose to download them, will be approximately 100 mb.",
+    "sim1-step_title": {
+      "html": "<img src=\"assets/step1.png\" width=\"600px\" height=\"150px\" class=\"center_icon\"/>",
+      "deps": [
+
+      ]
+    }
+  },
+  "export": {
+
+  }
+}

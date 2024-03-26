@@ -1,12 +1,3 @@
-config_intro_str <- "Edit your key inputs here before you run the model,
-  The model comes pre-populated with default valuesspecific to your region, 
-  but if you want to edit those, you can use the optional button at the bottom of this screen.
-  "
-
-num_replication_str <- " Indicate how many replications (trials) that you want to run, More will be more accurate, 
-but also require more time and larger data files. We recommend running between 100 and 1000.
-"
-
 sim_pages<- c("Configuration", "Input Validation", "Run Simulation")
 
 # Simulation steps as hidden tabs to create step by step effect
@@ -23,49 +14,47 @@ sim_tabs <- function(ns){
            ),
            fluidRow(
              column(6,
-                    numericInput(ns("start_year"), "Start Year", 2020, min=2000, max=2040)      
+                    numericInput(ns("start_year"), div(id=ns("info_start_year"), "Start Year ", bs_icon("question-circle")), 2020, min=2000, max=2040),
+                    bsPopover(ns("info_start_year"), "Start year for simulation", placement = "top", options = list(container = "body")),
              ),
              column(6,
-                    numericInput(ns("catchment_pop"), "Catchment Pop", 10000, min=1000, max=100000)      
+                    numericInput(ns("catchment_pop"), div(id=ns("info_catchment_pop"), "Catchment Pop ",  bs_icon("question-circle")), 10000, min=1000, max=100000),
+                    bsPopover(ns("info_catchment_pop"), "Catchment population for simulation, usually set to 10,000", placement = "top", options = list(container = "body")),
              ),
              
            ),
            fluidRow(
              column(6,
-                    numericInput(ns("end_year"), "End Year", 2040, min =2000, max=2090)      
+                    numericInput(ns("end_year"), div(id =ns("info_end_year"), "End Year ",  bs_icon("question-circle")), 2040, min =2000, max=2090),
+                    bsPopover(ns("info_end_year"), "End year for simulation", placement = "top", options = list(container = "body")),
              ),
              column(6,
-                    numericInput(ns("hrs_wk"), "Hours worked per week", 40, min=1, max = 60)      
+                    numericInput(ns("hrs_wk"), div(id = ns("info_hrs_wk"), "Hours worked per week ",  bs_icon("question-circle")), 40, min=1, max = 60),
+                    bsPopover(ns("info_hrs_wk"), "Working hours of Week, usually under 40 Hrs", placement = "top", options = list(container = "body")),
              )
              
            ),
            fluidRow(
              column(6,
-                    selectInput(ns("region"), "Region", choices = names(region_config_files), selected = names(region_config_files)[length(names(region_config_files))]),      
+                    selectInput(ns("region"), "Region ", choices = names(region_config_files), selected = names(region_config_files)[length(names(region_config_files))]), 
+                    bsPopover(ns("region"), "Switch to use regional data, must be supplied from data collection.", placement = "top", options = list(container = "body")),
              ),
              column(6,
-                    # shinyWidgets::autonumericInput(
-                    #   inputId = ns("hrh_utilization"), 
-                    #   label = "Target HRH utilization", 
-                    #   value = 1.0, 
-                    #   minimumValue = 0.0,
-                    #   maximumValue = 1.0,
-                    #   decimalPlaces = 2,
-                    #   digitGroupSeparator = ",",
-                    #   decimalCharacter = ".",
-                    #   align = "left",
-                    #   modifyValueOnWheel = TRUE
-                    # ),
-                    numericInput(ns("hrh_utilization"), "Target HRH utilization (%)", value=100, min=0, max =100, step = 1,)      
+                    numericInput(ns("hrh_utilization"), div(id =ns("info_hrh_utilization"), "Target HRH utilization (%) ",  bs_icon("question-circle")), value=100, min=0, max =100, step = 1,),
+                    bsPopover(ns("info_hrh_utilization"), "TBD", placement = "top", options = list(container = "body")),
              )
            ),
            fluidRow(
              column(6, 
-                    actionButton(ns("optional_params"), "Other Inputs (Optional)")
+                    actionButton(ns("optional_params"), div("Other Inputs (Optional)",  bs_icon("question-circle"))),
+                    bsPopover(ns("optional_params"), "Click here to view and modify simulation data", placement = "top", options = list(container = "body")),
              )
            )
   ),
   tabPanel(sim_pages[2], 
+           fluidRow(
+             column(12, h5(validation_intro_str))
+           ),
            tabsetPanel(
              id ="validation",
              tabPanel("Population Pyramid", simpleplotUI(ns("population-tab"))),
@@ -122,15 +111,16 @@ runSimulationUI <- function(id) {
                              actionButton(ns("prevBtn"), "Previous"), align="center"))),
         column(8, HTML("<br>")),
         column(2, div(id = ns("nextDiv"), 
-                      actionButton(ns("nextBtn"), "Next"), align="right")),
+                      actionButton(ns("nextBtn"), "Next",  class ="green-button"), align="right")),
       ),
 
       fluidRow(column(12, HTML("<br>"))
       ),
       fluidRow(
-        column(3, offset=9, div(id=ns("skipAll"), actionButton(ns("skipBtn"), "Skip To Run Simulation"), align="right"),style="margin-bottom: 100px;"),
-        bsTooltip(ns("skipBtn"), "Proceed directly to run simulation, Warning: Unchecked inputs may have problems.",
-                  "left", options = list(container = "body"))
+        column(3, offset=9, div(id=ns("skipAll"), bs_icon("question-circle", size=20),  "  ", actionButton(ns("skipBtn"), "Skip To Run Simulation"), align="right"),style="margin-bottom: 100px;"),
+        bsPopover(ns("skipAll"), "Warning", "Proceed directly to run simulation, Unchecked inputs may have problems.",
+                   placement = "top", options = list(container = "body")),
+       
       ),
     )
 }
@@ -158,14 +148,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         rv$pop_input <- read_excel(rv$input_file, sheet = "TotalPop")
         rv$pop_values <- read_excel(rv$input_file, sheet = rv$scenarios_input$sheet_PopValues)
       }
-      
-      # reformat hrh utilization
-      # formatted_value <- sprintf("%.2f", input$hrh_utilization)
-      # isolate(updateNumericInput(session, 
-      #                            "hrh_utilization", 
-      #                            value= sprintf("%.2f", input$hrh_utilization)
-      #                            )
-      #         )
+   
       if(sim_pages[rv$page]=="Configuration"){
         if(!rv$show_region){
           isolate(updateSelectInput(session, "region", label = "Region (Unavailable)"))
@@ -230,8 +213,11 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       if(rv$page >= which(sim_pages == "Run Simulation")){
         hide("skipAll")
         updateActionButton(session, "nextBtn", label = "Go To Results")
+        shinyjs::runjs(sprintf('document.getElementById("%s").classList.remove("green-button");', ns("nextBtn")))
+        shinyjs::runjs(sprintf('document.getElementById("%s").classList.add("green-button");', ns("run_simBtn")))
       }else{
         updateActionButton(session, "nextBtn", label = "Next")
+        shinyjs::runjs(sprintf('document.getElementById("%s").classList.add("green-button");', ns("nextBtn")))
       }
       
       output$step_title <- renderUI({
@@ -340,7 +326,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         ),
         footer = tagList(
           actionButton(ns("cancelDataChange"), "Cancel"),
-          actionButton(ns("saveValue"), "Save")
+          actionButton(ns("saveValue"), "Save", class="green-button")
         )
       ))
       
@@ -477,7 +463,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           span(textOutput(ns("errorRunName")), style="color:red"),
           footer = tagList(
             modalButton("Cancel"),
-            actionButton(ns("saveNameButton"), "Save")
+            actionButton(ns("saveNameButton"), "Save", class="green-button")
           )
         )
       )
@@ -545,6 +531,8 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
           loggerServer("logger", paste0("Simulation completed : ", rv$run_name))
           shinyjs::runjs(sprintf("Shiny.setInputValue('%s', 'FALSE');", ns('sim_ready')))
           shinyjs::show(id=ns("close_sim_log"), asis=TRUE)
+          shinyjs::runjs(sprintf('document.getElementById("%s").classList.add("green-button");', ns("nextBtn")))
+          shinyjs::runjs(sprintf('document.getElementById("%s").classList.remove("green-button");', ns("run_simBtn")))
         }
       }
     })
