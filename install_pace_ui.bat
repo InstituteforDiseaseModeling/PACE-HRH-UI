@@ -8,11 +8,12 @@ IF EXIST ".git" (
     ECHO You are in a Git repository, please follow ReadMe Instruction to run app in Rstudio
     ECHO Press any key to terminate...
     PAUSE > nul
+    exit
 ) 
 
 
 :: Determine if this is offline mode
-SET "OFFLINE_FOLDERS=R4.2.2 Library R config"
+SET "OFFLINE_FOLDERS=R4.2.2 R config"
 SET offline=TRUE
 FOR %%F IN (%OFFLINE_FOLDERS%) DO (
     IF NOT EXIST "%%F\" (
@@ -50,7 +51,6 @@ IF "%root_dir%"=="" (
 SET APP_DIR=%root_dir%\PACE-HRH-UI
 SET CODE_URL=https://github.com/InstituteforDiseaseModeling/PACE-HRH-UI/archive/refs/tags/1.0.0.zip
 SET DOWNLOAD_PATH="%root_dir%\pace-hrh-ui.zip"
-SETX R_LIBS "%root_dir%\Library"
 
 
 IF NOT EXIST "%APP_DIR%" (
@@ -104,7 +104,7 @@ ECHO You have accepted the terms.
 
 POPD
 
-SET R_PATH="%root_dir%\R\R-4.2.2\bin\Rscript.exe"
+SET R_PATH="%APP_DIR%\%WORKING_DIR%\R-4.2.2\bin\Rscript.exe"
 
 :: Check if R is installed
 SET DOWNLOAD_R_PATH="%root_dir%\R-4.2.2-win.exe"
@@ -119,14 +119,14 @@ IF EXIST "%R_PATH%" (
 
     ECHO Installing R...
     :: Run the installer silently
-    %DOWNLOAD_R_PATH% /VERYSILENT /NORESTART /DIR=%root_dir%\R\R-4.2.2
+    %DOWNLOAD_R_PATH% /VERYSILENT /NORESTART /DIR="%APP_DIR%\%WORKING_DIR%\R-4.2.2"
 
     ECHO R 4.2.2 installation complete.
-    SETX PATH "%R_PATH%;%PATH%"
 
     ECHO Install packages...
     :: Run the R script in silent mode
-    "%R_PATH%" --vanilla %APP_DIR%\%WORKING_DIR%\install_packages.R
+   
+    %R_PATH% --vanilla "%APP_DIR%\%WORKING_DIR%\install_packages.R"
 )
 
 :: Start The shinyapps in port 8888 and open the browser

@@ -10,7 +10,7 @@ pkgnames <- c(
 print(paste0("Install Packages from Cran : ", pkgnames))
 install.packages(pkgnames,
                  repos='http://cran.rstudio.com/',
-                 type='both')
+                 type='binary')
 
 library(devtools)
 install_github("trestletech/shinyStore")
