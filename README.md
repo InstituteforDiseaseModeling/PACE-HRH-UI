@@ -21,21 +21,26 @@ Install the most recent version of the PACE-HRH-UI binary file from our [release
 
 
 ### Run the app locally 
-In RStudio open `app.R` and click on "Run App". Alternatively you can launch the app from the RStudio console with the following: 
+The first step is torun `install_packages.R`, once you have all the dependent packages installed, 
+in RStudio open `app.R` and click on "Run App". Alternatively you can launch the app from the RStudio console with the following: 
 ```
 library(shiny)
-runApp()
+runApp(port=8888)
 ```
+<br>
+This will launch your default browser and open http://localhost:8888, you can use any port as you wish 
+but if you switch port between two runs, your data may not be saved in the local storage.
 
-### Installation and Run on windows without Rstudio
+### Installation and Run on windows without Git and Rstudio
 To install the app in a separate environment: 
 <br>
-Run `start_pace_ui.bat` which will give you a step by step guide for installation and running the app
+Download `start_pace_ui.bat` and run it by double clicking it (or open a commandline window to your downloaded folder to run it).
+This will prompt you a step by step guide for installation and running the app
 <br>
-Once installed on your desired folder, for future use, you should go to the subfolder with name PACE-HRH-UI-{version} and run the install_pace_ui.bat from there, 
+Once installed on your desired folder, for future use, you should go to the subfolder with name PACE-HRH-UI-{version} and run the start_pace_ui.bat from there, 
 this will start the app and open your default browser so that you can interact with it. To close the app, simply press any key on the batch script window.
 <br>
-You can zip this self-contained folder and send it to those who do not have internet access, they should be able to run start_pace_ui.bat without installation.
+You can zip this pre-installed self-contained folder and send it to those who do not have internet access, they should be able to run start_pace_ui.bat without installation.
 <br>
 
 ### Screenshots
