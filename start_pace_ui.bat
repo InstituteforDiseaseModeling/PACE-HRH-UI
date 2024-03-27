@@ -136,6 +136,20 @@ IF EXIST "%R_PATH%" (
     %R_PATH% --verbose --vanilla "%APP_DIR%\%WORKING_DIR%\install_packages.R"
 )
 
+
+REM Install a woking version 
+curl -L -o pacehrh_1.1.0.zip https://github.com/InstituteforDiseaseModeling/PACE-HRH/releases/download/1.1.0/pacehrh_1.1.0.zip
+%R_PATH% -e "if (!require('pacehrh', character.only=TRUE)) install.packages('pacehrh_1.1.0.zip', repos = NULL, type = 'source');library(pacehrh)"
+
+REM Ask User to start again with Offline mode
+IF %offline%==FALSE (
+    ECHO Please go to %SHINY_DIR% and run the start_pace_ui.bat again
+    ECHO Press any key to terminate ...
+    PAUSE > nul
+    exit
+)
+
+
 :app
 REM Start The shinyapps in port 8888 and open the browser
 SET PORT=8888
