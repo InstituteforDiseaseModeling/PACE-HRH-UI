@@ -1,0 +1,120 @@
+---
+title: 'Validation report'
+output:
+  html_document:
+     toc: true
+     df_print: kable
+  pdf_document: default
+  word_document: default
+params:
+  inputFile: config/model_inputs.xlsx
+  outputDir: log
+  optional_sheets: !r NULL
+---
+```{css, echo=FALSE}
+div.error { background-color: IndianRed; }
+div.warning { background-color: lightyellow; }
+div.info { background-color: lightblue; }
+.table caption { font-weight:bold; color:black; }
+```
+# Validation Results
+<br><br>
+
+## Input Data Check:
+<br><br>
+```{r, echo=FALSE, results='hide',  message=FALSE, warning=FALSE}
+source("ValidateInput.R")
+source("ValidateInput_plot.R")
+Validate(inputFile = params$inputFile, outputDir = params$outputDir, optional_sheets=params$optional_sheets)
+```
+
+```{r echo=FALSE, results='asis'}
+result <- read.csv(paste(params$outputDir, "input_validation_results.csv", sep="/"))
+outfile <- paste(params$outputDir, "input_validation_results.png", sep="/")
+plot_result(result, outfile)
+knitr::include_graphics(normalizePath(outfile))
+
+# set caption color
+set_caption_color <- function(state){
+    if (state == "error") {
+      cat('<div class="error">')
+    }
+    else if (state == "warning") {
+      cat('<div class="warning">')
+    }
+    else if (state == "info"){
+     cat('<div class="info">')
+    }
+    else{
+      cat("</div>")
+    }
+  }
+```
+
+-   Please check below csv files in `r params$outputDir` folder for any row based validation issue:
+
+
+```{r echo=FALSE, comment='', results='asis', warning=FALSE, message=TRUE, paged.print=TRUE}
+files <- list.files(path=params$outputDir, pattern = "(info|warning|error).*.csv")
+
+metadata <- read.csv(paste(params$outputDir, "input_validation_results.csv", sep="/"))
+for (f in files){
+  filename <- normalizePath(paste(params$outputDir, f, sep="/"))
+  message(paste0(filename,"\n\n"))
+  rule_name <- gsub('^.+?_violation_(.+?).csv', '\\1', f)
+  sheet_name <- stringr::str_replace(f, gsub('^.+?(_(error|info|warning))', '\\1', f), "")
+  info <- metadata %>%
+    filter(name == rule_name)
+  tbl_description <- info %>%
+    mutate(text_value=paste0(severity, ": ", description)) %>%
+    select(text_value) %>%
+    unique() %>% 
+   .$text_value
+  vars <- all.vars(as.formula(
+    info %>% 
+    mutate(expression = paste("~ ", expression, sep="")) %>%
+    select(expression) %>%
+    .$expression))
+  key <- key_cols[sheet_name][[1]]
+  extra_cols <- rule_cols[rule_name][[1]]
+  data <- read.csv(paste(params$outputDir, f, sep="/"))
+  data <- data %>% select(unique(c(all_of(key), all_of(extra_cols), all_of(vars))))
+  set_caption_color(str_split(tbl_description, ":", simplify = TRUE)[1])
+  print(knitr::kable(data, caption=tbl_description, format='pipe', align = "l"))
+  set_caption_color("none")
+}
+```
+## Model Requirement Check:
+<br><br>
+```{r echo=FALSE, comment='', warning=FALSE}
+cat(readLines(paste(params$outputDir, "model_input_check.log", sep = "/")), sep = '\n')
+```
+## Custom Data Check:
+<br><br>
+```{r echo=FALSE, comment='', results = 'asis', warning=FALSE}
+  for (f in sort(list.files(file.path(params$outputDir, "custom"), "*.png"))){
+    filename <- normalizePath(file.path(params$outputDir, "custom", f))
+    cat("\n\n\n")
+    cat("![](",filename,")")
+    cat("\n\n\n")
+  }
+  custom_metadata <- read.csv(normalizePath(file.path(params$outputDir, "custom", "custom_validation_results.csv")))
+  for (i in 1:nrow(custom_metadata)){
+    f <- as.character(custom_metadata[i, "name"])
+    baddata <- read.csv(normalizePath(f))
+    tbl_description <- paste(as.character(custom_metadata[i, "severity"]), ": ", as.character(custom_metadata[i, "description"]))
+    set_caption_color(custom_metadata[i, "severity"])
+    print(knitr::kable(baddata, caption=tbl_description, format='pipe', align = "l"))
+    set_caption_color("none")
+  }
+  
+```
+## Additional Logs:
+<br><br>
+```{r echo=FALSE, comment='', warning=FALSE}
+logfiles <- list.files(path=params$outputDir,
+                        recursive=T,
+                        pattern=.errorLogfile
+                        ,full.names=T)
+cat(readLines(logfiles[[1]]), sep = '\n')
+```

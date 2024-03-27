@@ -4,7 +4,7 @@ pkgnames <- c(
 'devtools', 'DT', 'shiny', 'shinyjs', 'shinyalert', 'shinyWidgets', 'shinythemes', 'shinycssloaders', 'plotly', 'truncnorm', 'shinyBS', 'openxlsx', 
 'validate','readxl', 'dplyr','ggplot2', 'tidyr', 'kableExtra', 'stringr', 'plyr', 'reshape2', 'scales', 'glue', 'logr', 'tidyverse', 'showtext',
 'treemapify', 'knitr', 'mockr', 'bsicons',
-'shinytest2', 'uuid','ggrepel'
+'shinytest2', 'uuid','ggrepel', 'assertthat'
 )
 
 print(paste0("Install Packages from Cran : ", pkgnames))
@@ -17,6 +17,7 @@ install_github("trestletech/shinyStore", upgrade="never")
 # Install pacehrh package
 install_github('InstituteforDiseaseModeling/PACE-HRH', 
                subdir='pacehrh',  
+               ref ='1.1.0',
                force = TRUE, 
                dependencies = TRUE, 
                upgrade="never")

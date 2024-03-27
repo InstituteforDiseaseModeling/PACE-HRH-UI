@@ -140,7 +140,7 @@ run_pacehrh_simulation <- function(rv, input_file){
     
   }, error=function(e){
     loggerServer("logger", paste0("Run failed: ", e$message))
-    loggerServer("logger", paste0("Please attach the log when reporting the error"), close=TRUE)
+    loggerServer("logger", paste0("Please attach the log when reporting the error"))
     unlink(file.path(results_dir), recursive = TRUE)
     new_rv = NULL
   })
