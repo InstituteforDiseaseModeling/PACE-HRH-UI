@@ -157,14 +157,8 @@ SET PORT=8888
 ECHO Starting Shiny app on port %PORT%...
 ECHO Using %R_PATH% ON %SHINY_DIR%
 
-START /MIN "" %R_PATH% -e "shiny::runApp(appDir='%SHINY_DIR%', port=%PORT%, launch.browser=FALSE)"
-
-REM Wait for a few seconds to ensure the Shiny app has started
-ECHO Wait for 5 seconds for app launching ...
-TIMEOUT /T 5
-
-REM Open the default web browser to the Shiny app
-START http://localhost:%PORT%
+START /MIN "" %R_PATH% -e "shiny::runApp(appDir='%SHINY_DIR%', port=%PORT%, launch.browser=TRUE)"
+ECHO Your default browser will be opened for PACE-HRH-UI in a few seconds ...
 
 GOTO end
 
