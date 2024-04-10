@@ -84,7 +84,7 @@ get_slide_4_plot <- function(rv, plotly=TRUE){
     geom_errorbar(data =temp_total, aes(x=Year,ymin=CI05/WeeksPerYr, ymax=CI95/WeeksPerYr), colour="black", width=.3)+
     ylim(0,maxyval)+
     theme_bw()+
-    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(.8,1,.8,1,"cm")))+
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(1,1,1,1,"cm")))+
     labs(y=ylabel,x="")+
     scale_fill_viridis_d()+
     facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40)))
@@ -127,7 +127,7 @@ byServiceCat_plot <- function(rv, plotly=TRUE){
     facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40))) +
     theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1))+
     theme(legend.position = c(0.02, 1), legend.justification = c(0.02, 1), legend.key.size=unit(0.3, 'cm'), legend.direction="vertical", legend.background = element_rect(fill = 'transparent'))+
-    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(.8,1,.8,1,"cm")))+
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(1,1,1,1,"cm")))+
     scale_fill_brewer(palette = "BrBG", direction = -1)+
     labs(x="", y="Hours per Week for Catchment Pop")
   
@@ -179,12 +179,10 @@ byServiceTile_plot <- function(rv, plotly=TRUE){
   plot <- ggplot(temp_ServiceCat,aes(x=Year,y=MeanHrs/Denominator,fill=ServiceLabel))+
     geom_bar(stat="identity",position="fill")+
     theme_bw() + 
-    facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40))) +
     scale_fill_viridis_d()+
-    geom_text(data=subset(temp_ServiceCat,Year==StartYear | Year==EndYear),aes(x=Year,y=MeanHrs/Denominator,
-                                                                               label=paste(round(MeanHrs/Denominator*100,0),"%",sep=""),
-                                                                               position = position_stack(vjust = 0.5)))+
-    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(.8,1,.8,1,"cm")))+
+    geom_text(aes(label=paste(round(MeanHrs/Denominator*100,0),sep="")), position = position_fill(vjust = 0.5))+
+    facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40))) +
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(1,1,1,1,"cm")))+
     xlab("")+ylab("% of workload by type")+
     labs(fill="Service")+
     scale_y_continuous(labels = scales::percent)
@@ -206,8 +204,8 @@ serviceOverTime_plot <- function(rv, plotly=TRUE){
   ServiceCat_Clinical <- rv$Mean_ServiceCat %>%
     subset(ClinicalOrNon=="Clinical") %>%
     filter(Year >= StartYear & Year <= EndYear) %>% 
-    group_by(test_name, ServiceCat) %>% 
     dplyr::mutate(Scenario_label = paste(test_name, " - Starting Pop=", format(BaselinePop, big.mark = ",")," - Hrs Per Week=",HrsPerWeek," - Weeks Per Year=",WeeksPerYr,sep="")) %>%
+    group_by(Scenario_label, ServiceCat) %>% 
     dplyr::mutate(MeanHrs_Start = dplyr::first(MeanHrs), RatioTo1 = MeanHrs/MeanHrs_Start) %>% 
     dplyr::mutate(RatioLabel = case_when(
       Year == max(Year) ~ paste(ServiceCat, round(RatioTo1,1), sep = ","))) 
@@ -221,7 +219,7 @@ serviceOverTime_plot <- function(rv, plotly=TRUE){
     scale_color_discrete()+
     geom_text(data=subset(ServiceCat_Clinical,Year==max(ServiceCat_Clinical$Year))) +
     facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40))) +
-    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(.8,1,.8,1,"cm")))+
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(1,1,1,1,"cm")))+
     labs(x = "", y = "Ratio of Workload vs. Baseline Year")
   
   if(plotly){
@@ -249,10 +247,9 @@ seasonality_plot <- function(rv, plotly=TRUE){
     left_join(Monthly_NonClinical, by = c("test_name", "Year"))  %>% 
     dplyr::mutate(NonClinical_Monthly = replace_na(NonClinical_Monthly,0)) %>% 
     group_by(test_name, Trial_num, Year) %>% 
-    dplyr::mutate(Scenario_label = paste(test_name, " - Starting Pop=", format(BaselinePop, big.mark = ",")," - Hrs Per Week=",HrsPerWeek," - Weeks Per Year=",WeeksPerYr,sep="")) %>%
     dplyr::mutate(MeanMonthHrs = (mean(TotHrs)+NonClinical_Monthly), RatioToMean = (TotHrs+NonClinical_Monthly)/(MeanMonthHrs)) %>% 
     ungroup() %>% 
-    group_by(Scenario_label, Month) %>% 
+    group_by(test_name, Month) %>% 
     dplyr::summarize(RatioToMean_p05 = quantile(RatioToMean, 0.05),
                      RatioToMean_p25 = quantile(RatioToMean, 0.25),
                      RatioToMean_p50 = quantile(RatioToMean, 0.50),
@@ -265,8 +262,7 @@ seasonality_plot <- function(rv, plotly=TRUE){
     geom_hline(yintercept = 1, color = "blue", linetype="dashed")+
     scale_color_manual("#80B1D3")+
     scale_x_continuous(breaks =  seq(1, 12))+
-    facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40)))+
-    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(.8,1,.8,1,"cm")))+
+    facet_wrap(~test_name)+
     labs(x = "Month", y="Ratio of workload for the month to annual average")
   
   if(plotly){

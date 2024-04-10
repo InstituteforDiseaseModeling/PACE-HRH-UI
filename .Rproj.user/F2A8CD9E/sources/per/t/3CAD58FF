@@ -1,0 +1,26 @@
+{
+    "id": "3CAD58FF",
+    "path": "~/GitHub/PACE-HRH-UI/R/plottingFunctions.R",
+    "project_path": "R/plottingFunctions.R",
+    "type": "r_source",
+    "hash": "1937076883",
+    "contents": "",
+    "dirty": false,
+    "created": 1709826195589.0,
+    "source_on_save": false,
+    "relative_order": 6,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "182,66",
+        "scrollLine": "135"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1712786720,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1712786720265,
+    "read_only": false,
+    "read_only_alternatives": []
+}
