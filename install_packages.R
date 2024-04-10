@@ -3,8 +3,7 @@ options(Ncpus = parallel::detectCores())
 pkgnames <- c(
 'devtools', 'DT', 'shiny', 'shinyjs', 'shinyalert', 'shinyWidgets', 'shinythemes', 'shinycssloaders', 'plotly', 'truncnorm', 'shinyBS', 'openxlsx', 
 'validate','readxl', 'dplyr','ggplot2', 'tidyr', 'kableExtra', 'stringr', 'plyr', 'reshape2', 'scales', 'glue', 'logr', 'tidyverse', 'showtext',
-'treemapify', 'ggrepel', 'knitr', 'mockr',
-'shinytest2', 'uuid','ggrepel'
+'treemapify', 'knitr', 'mockr','shinytest2', 'uuid'
 )
 
 print(paste0("Install Packages from Cran : ", pkgnames))

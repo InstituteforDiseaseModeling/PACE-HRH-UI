@@ -179,7 +179,7 @@ viewRunsServer <- function(id, rv, store) {
             plotting_function = "byServiceCat_plot",
             rv = rv_results)
           
-          ggplotTabServer(
+          plotTabServer(
             id = "by-ServiceTile-tab",
             plotting_function = "byServiceTile_plot",
             rv = rv_results)
