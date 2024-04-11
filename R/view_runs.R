@@ -37,7 +37,7 @@ viewRunsUI <- function(id) {
                 title = "By Clinical Category"),
       plotTabUI(id = ns("by-ServiceCat-tab"),
                 title = "By Service Category"),
-      ggplotTabUI(id = ns("by-ServiceTile-tab"),
+      plotTabUI(id = ns("by-ServiceTile-tab"),
                   title = "By Service Category Tiles"),
       plotTabUI(id = ns("service-over-time-tab"),
                 title = "Service change over time"),
@@ -189,7 +189,7 @@ viewRunsServer <- function(id, rv, store) {
             plotting_function = "byServiceCat_plot",
             rv = rv_results)
           
-          ggplotTabServer(
+          plotTabServer(
             id = "by-ServiceTile-tab",
             plotting_function = "byServiceTile_plot",
             rv = rv_results)

@@ -22,7 +22,7 @@ plotTabUI <- function(id=NULL, title=NULL) {
 }
 
 
-plotTabServer <- function(id, plotting_function, rv, show_wait=TRUE) {
+plotTabServer <- function(id, plotting_function, rv, show_wait=TRUE, plotly=TRUE) {
     moduleServer(id, function(input, output, session) {
     ns <- session$ns
     plotLoading <- reactiveVal(show_wait)
@@ -35,16 +35,30 @@ plotTabServer <- function(id, plotting_function, rv, show_wait=TRUE) {
       }
     })
     
-    output$plot <- renderPlotly({
-      if (!is.null(rv$results) ) {
-        plot <- do.call(plotting_function, list(rv))
-        plotLoading(FALSE)
-        plot %>% ggplotly(height = 500)
-      }else{
-        print("no results")
-        NULL
-      }
-    })
+    if(plotly){
+      output$plot <- renderPlotly({
+        if (!is.null(rv$results) ) {
+          plot <- do.call(plotting_function, list(rv))
+          plotLoading(FALSE)
+          plot %>% ggplotly(height = 500)
+        }else{
+          print("no results")
+          NULL
+        }
+      })
+    } else{
+      output$plot <- renderPlot({
+        if (!is.null(rv$results) ) {
+          plot <- do.call(plotting_function, c(list(rv), FALSE))
+          plotLoading(FALSE)
+          plot
+        }else{
+          print("no results")
+          NULL
+        }
+      })
+    }
+    
   })
 }
 

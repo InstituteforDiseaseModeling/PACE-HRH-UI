@@ -1,6 +1,7 @@
 library(pacehrh)
 library(plotly)
 library(treemapify)
+library(mgcv)
 
 # ------------------Fertility Plot --------------------
 get_fertility_rates_time_series_plot <- function(rv) {
@@ -54,10 +55,7 @@ get_population_plot <- function(rv) {
 
 # -----------------Slide 4 plot---------------------
 get_slide_4_plot <- function(rv, plotly=TRUE){
-  #graphic for slide 4 (hours per week on clinical, development, and total work)
-  #dashed line is actual hours worked per week, according to time and motion study
-  #solid line is the 95th percentile, simulated
-  #bars are the simulated expected value for time required, best case with perfect scheduling
+ 
   StartYear <-  rv$start_year + 1
   EndYear <-  rv$end_year 
   
@@ -69,14 +67,14 @@ get_slide_4_plot <- function(rv, plotly=TRUE){
     mutate(Alpha = case_when(
       ClinicalOrNon == "Clinical" ~ 0.3,
       ClinicalOrNon != "Clinical" ~ 1)) %>%
-    mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Pop", sep=" "))
+    mutate(Scenario_label = paste(test_name, " - Starting Pop=", format(BaselinePop, big.mark = ",")," - Hrs Per Week=",HrsPerWeek," - Weeks Per Year=",WeeksPerYr,sep=""))
   temp_clin$Category <- factor(temp_clin$Category,ordered=TRUE,levels=unique(temp_clin$Category))
   
   temp_total <- rv$Mean_Total %>%
     filter(Year >= StartYear & Year <= EndYear) %>% 
-    mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Pop", sep=" "))
+    mutate(Scenario_label = paste(test_name, " - Starting Pop=", format(BaselinePop, big.mark = ",")," - Hrs Per Week=",HrsPerWeek," - Weeks Per Year=",WeeksPerYr,sep=""))
   
-  ylabel <- "Hours per Week per Catchment Pop"
+  ylabel <- "Hours per Week for Catchment Pop"
   maxyval <- max(rv$Mean_Total$CI95/rv$Mean_Total$WeeksPerYr)*1.05
   
   plot <- ggplot()+
@@ -86,12 +84,10 @@ get_slide_4_plot <- function(rv, plotly=TRUE){
     geom_errorbar(data =temp_total, aes(x=Year,ymin=CI05/WeeksPerYr, ymax=CI95/WeeksPerYr), colour="black", width=.3)+
     ylim(0,maxyval)+
     theme_bw()+
-    scale_x_continuous(breaks = seq(StartYear,EndYear))+
-    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1))+
-    labs(fill=" ")+
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(1,1,1,1,"cm")))+
+    labs(y=ylabel,x="")+
     scale_fill_viridis_d()+
-    facet_wrap(~Scenario_label)+
-    ylab(ylabel) + xlab("")
+    facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40)))
   
   if(plotly){
     ggplotly(plot)
@@ -100,8 +96,8 @@ get_slide_4_plot <- function(rv, plotly=TRUE){
     plot
   }
   
-  
 }
+
 # -----------------by ServiceCat bar plot---------------------
 byServiceCat_plot <- function(rv, plotly=TRUE){
 
@@ -111,12 +107,14 @@ byServiceCat_plot <- function(rv, plotly=TRUE){
   ServiceCat_Clinical <- rv$Mean_ServiceCat %>%
     subset(ClinicalOrNon=="Clinical") %>%
     filter(Year >= StartYear & Year <= EndYear) %>% 
-    dplyr::mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Starting Pop", sep=" ")) %>% 
-    group_by(test_name, Year) %>%
+    dplyr::mutate(Scenario_label = paste(test_name, " - Starting Pop=", format(BaselinePop, big.mark = ",")," - Hrs Per Week=",HrsPerWeek," - Weeks Per Year=",WeeksPerYr,sep="")) %>%
+    group_by(Scenario_label, Year) %>%
     dplyr::mutate(TotalHrs=sum(MeanHrs)) 
+  
   temp_TotClin <- rv$Stats_TotClin %>% 
     filter(Year >= StartYear & Year <= EndYear) %>% 
-    dplyr::mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Starting Pop", sep=" "))
+    dplyr::mutate(Scenario_label = paste(test_name, " - Starting Pop=", format(BaselinePop, big.mark = ",")," - Hrs Per Week=",HrsPerWeek," - Weeks Per Year=",WeeksPerYr,sep=""))
+  
   ymax <- max(temp_TotClin$CI95/temp_TotClin$WeeksPerYr)*1.05
   
   plot <- ggplot() +
@@ -126,13 +124,12 @@ byServiceCat_plot <- function(rv, plotly=TRUE){
     geom_point(data=temp_TotClin,aes(x=Year,y=CI50/WeeksPerYr))+
     geom_errorbar(data=temp_TotClin,aes(x=Year,ymin=CI05/WeeksPerYr, ymax=CI95/WeeksPerYr), colour="black", width=.3)+
     ylim(0, ymax) +
-    facet_wrap(~Scenario_label) +
+    facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40))) +
     theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1))+
-    theme(legend.position = c(0.02, 1), legend.justification = c(0.02, 1), 
-          legend.key.size=unit(0.3, 'cm'), legend.direction="vertical", legend.background = element_rect(fill = 'transparent'))+
-    labs(fill=" ")+
+    theme(legend.position = c(0.02, 1), legend.justification = c(0.02, 1), legend.key.size=unit(0.3, 'cm'), legend.direction="vertical", legend.background = element_rect(fill = 'transparent'))+
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(1,1,1,1,"cm")))+
     scale_fill_brewer(palette = "BrBG", direction = -1)+
-    labs(x="", y="Hours per Week per Catchment Pop")
+    labs(x="", y="Hours per Week for Catchment Pop")
   
   if(plotly){
     ggplotly(plot)
@@ -143,32 +140,58 @@ byServiceCat_plot <- function(rv, plotly=TRUE){
 }
 
 # -----------------by ServiceCat tile plot---------------------
-byServiceTile_plot <- function(rv){
+byServiceTile_plot <- function(rv, plotly=TRUE){
 
   StartYear <-  rv$start_year + 1
+  EndYear <-  rv$end_year 
   
   temp_ServiceCat <- rv$Mean_ServiceCat %>% 
-    filter(Year == StartYear) %>% 
+    filter(Year >= StartYear & Year <= EndYear) %>% 
+    dplyr::mutate(Scenario_label = paste(test_name, " - Starting Pop=", format(BaselinePop, big.mark = ",")," - Hrs Per Week=",HrsPerWeek," - Weeks Per Year=",WeeksPerYr,sep="")) %>%
     mutate(ServiceLabel = case_when(
-      ServiceCat == "Family planning" ~ "FP",
-      ServiceCat == "Immunization" ~ "RI",
+      ServiceCat == "Family planning" ~ "Family planning",
+      ServiceCat == "Immunization" ~ "Immunization",
       ServiceCat == "Overhead 1" | ServiceCat == "Overhead 2" ~ "Admin",
       ServiceCat == "Record keeping" ~ "Records",
-      ServiceCat == "Nutrition" ~ "Nutri",
+      ServiceCat == "Nutrition" ~ "Nutrition",
+      ServiceCat == "NCDs" ~ "NCD",
       ServiceCat == "Sick child" ~ "IMNCI",
-      ServiceCat == "Disease surveillance for reportable diseases" ~ "DS", 
+      ServiceCat == "Disease surveillance for reportable diseases" ~ "Surveillance", 
       T ~ ServiceCat)) %>% 
-    filter(ClinicalOrNon == "Clinical")
+    filter(ClinicalOrNon == "Clinical") %>%
+    group_by(Year)
   
-  p <- ggplot(temp_ServiceCat,aes(area=MeanHrs,fill=ServiceLabel,label=ServiceLabel,subgroup=ServiceLabel))+
-    geom_treemap()+geom_treemap_text(color="black",place="center",size=16)+
-    geom_treemap_subgroup_border(color="black",size=2.5)+
-    facet_wrap(~test_name) +
-    theme_bw()+theme(legend.position = "none")+
+  # p <- ggplot(temp_ServiceCat,aes(area=MeanHrs,fill=ServiceLabel,label=ServiceLabel,subgroup=ServiceLabel))+
+  #   geom_treemap()+geom_treemap_text(color="black",place="center",size=16)+
+  #   geom_treemap_subgroup_border(color="black",size=2.5)+
+  #   facet_wrap(~test_name) +
+  #   theme_bw()+theme(legend.position = "none")+
+  #   scale_fill_viridis_d()+
+  #   theme(strip.text = element_text(size = 16))
+  
+  temp_ServiceCatTotal <- rv$Mean_ServiceCat %>%
+    filter(ClinicalOrNon == "Clinical") %>%
+    group_by(Year) %>%
+    summarize(TotalValue = sum(MeanHrs,na.rm=TRUE)) 
+  
+  temp_ServiceCat$Denominator = temp_ServiceCatTotal$TotalValue[match(temp_ServiceCat$Year,temp_ServiceCatTotal$Year)]
+  
+  plot <- ggplot(temp_ServiceCat,aes(x=Year,y=MeanHrs/Denominator,fill=ServiceLabel))+
+    geom_bar(stat="identity",position="fill")+
+    theme_bw() + 
     scale_fill_viridis_d()+
-    theme(strip.text = element_text(size = 16))
+    geom_text(aes(label=paste(round(MeanHrs/Denominator*100,0),sep="")), position = position_fill(vjust = 0.5))+
+    facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40))) +
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(1,1,1,1,"cm")))+
+    xlab("")+ylab("% of workload by type")+
+    labs(fill="Service")+
+    scale_y_continuous(labels = scales::percent)
   
-  print(p)
+  if(plotly){
+    ggplotly(plot)
+  } else{
+    plot
+  }
   
 }
 
@@ -179,16 +202,15 @@ serviceOverTime_plot <- function(rv, plotly=TRUE){
   EndYear <-  rv$end_year  
   
   ServiceCat_Clinical <- rv$Mean_ServiceCat %>%
-    subset(ClinicalOrNon=="Clinical" & ServiceCat!="HIV") %>%
+    subset(ClinicalOrNon=="Clinical") %>%
     filter(Year >= StartYear & Year <= EndYear) %>% 
-    group_by(test_name, ServiceCat) %>% 
+    dplyr::mutate(Scenario_label = paste(test_name, " - Starting Pop=", format(BaselinePop, big.mark = ",")," - Hrs Per Week=",HrsPerWeek," - Weeks Per Year=",WeeksPerYr,sep="")) %>%
+    group_by(Scenario_label, ServiceCat) %>% 
     dplyr::mutate(MeanHrs_Start = dplyr::first(MeanHrs), RatioTo1 = MeanHrs/MeanHrs_Start) %>% 
     dplyr::mutate(RatioLabel = case_when(
       Year == max(Year) ~ paste(ServiceCat, round(RatioTo1,1), sep = ","))) 
-  ServiceCat_Clinical$ServiceCat = as.factor(ServiceCat_Clinical$ServiceCat)
   
-  #yplotmax = max(ServiceCat_Clinical$RatioTo1)*1.02
-  #yplotmin = min(ServiceCat_Clinical$RatioTo1)*0.98
+  ServiceCat_Clinical$ServiceCat = as.factor(ServiceCat_Clinical$ServiceCat)
   
   plot <- ggplot(ServiceCat_Clinical,aes(x=Year,y=RatioTo1,group=ServiceCat,label=round(RatioTo1,2)) )+
     geom_line(aes(color=ServiceCat),size=1.1) +
@@ -196,12 +218,9 @@ serviceOverTime_plot <- function(rv, plotly=TRUE){
     theme_bw() +
     scale_color_discrete()+
     geom_text(data=subset(ServiceCat_Clinical,Year==max(ServiceCat_Clinical$Year))) +
-    facet_wrap(~test_name) +
-    #scale_x_continuous(breaks = seq(StartYear,EndYear),limits=c(StartYear,max(ServiceCat_Clinical$Year)+15)) +
-    #scale_y_continuous(limits = c(yplotmin,yplotmax)) +
-    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1)) +
-    labs(x = "", y = "Ratio of Workload vs. Baseline Year") + 
-    labs(fill=" ")
+    facet_wrap(~Scenario_label,labeller=labeller(Scenario_label=label_wrap_gen(40))) +
+    theme(axis.text.x = element_text(angle=-90, vjust = .5, hjust=1), legend.title=element_blank(), strip.text = element_text(size=12,margin=margin(1,1,1,1,"cm")))+
+    labs(x = "", y = "Ratio of Workload vs. Baseline Year")
   
   if(plotly){
     ggplotly(plot)
@@ -239,8 +258,7 @@ seasonality_plot <- function(rv, plotly=TRUE){
   
   plot <- ggplot(data=RatioToAvg_ByMonth)+
     theme_bw()+
-    geom_ribbon(aes(x = Month, ymin = RatioToMean_p05, ymax = RatioToMean_p95), fill = "#80B1D3",  alpha = 0.25)+
-    geom_smooth(aes(x = Month, y=RatioToMean_p50), method ="loess", fill = "transparent", span=0.5, alpha = 0.25)+
+    geom_smooth(aes(x = Month, y=RatioToMean_p50), method ="loess",se=TRUE, fill = "#80B1D3", span=0.5, alpha = 0.25)+
     geom_hline(yintercept = 1, color = "blue", linetype="dashed")+
     scale_color_manual("#80B1D3")+
     scale_x_continuous(breaks =  seq(1, 12))+
@@ -261,10 +279,11 @@ get_pdf_report <- function(rv){
   # print to pdf
   current_datetime <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
   filename <- file.path(result_root, paste0("report_", current_datetime, ".pdf"))
-  pdf(file = filename, width = 11, height = 8.5)
+  scenariocount = length(unique(rv$Mean_ServiceCat$test_name))
+  pdf(file = filename, width = (scenariocount * 9.5), height = 8)
   p1 <- get_slide_4_plot(rv, plotly = FALSE)
   p2 <- byServiceCat_plot(rv, plotly = FALSE)
-  p3 <- byServiceTile_plot(rv)
+  p3 <- byServiceTile_plot(rv, plotly = FALSE)
   p4 <- serviceOverTime_plot(rv, plotly = FALSE)
   p5 <- seasonality_plot(rv, plotly = FALSE)
   print(p1)
