@@ -81,6 +81,21 @@ viewRunsServer <- function(id, rv, store) {
       }
     }
     
+    showWarningModalNoFiles <- function() {
+      shiny::showModal(
+        modalDialog(
+          title = "Warning",
+          "You do not have any result to view, please run at least one simulation!",
+          footer = tagList(
+            actionButton(ns("closeNoFileModal"), "Close", icon = icon("times"))
+          )
+        )
+      )
+    }
+    observeEvent(input$closeNoFileModal, {
+      shiny::removeModal()
+    })
+    
     observeEvent(input$test_history, {
       df_history <- jsonlite::fromJSON(input$test_history)
       df_history$summary <- apply(df_history, 1, function(row) {
@@ -171,12 +186,17 @@ viewRunsServer <- function(id, rv, store) {
     }
     
     observeEvent(input$compare_btn, {
-      shinyjs::show(id=ns("search_msg"), asis = TRUE)
-      selected <- which(selectedRows())
-      print(paste0("selected ", length(selected)))
-      test_selected <- rv$df_history[selected, 'name']
-      redraw(combine_selected_data(selected))    
-      shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+      if(!is.null(rv$df_history)){
+        shinyjs::show(id=ns("search_msg"), asis = TRUE)
+        selected <- which(selectedRows())
+        print(paste0("selected ", length(selected)))
+        test_selected <- rv$df_history[selected, 'name']
+        redraw(combine_selected_data(selected))    
+        shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+      }
+      else{
+        showWarningModalNoFiles()
+      }
     })
     
     observe ({
@@ -230,24 +250,30 @@ viewRunsServer <- function(id, rv, store) {
     }
     
     observeEvent(input$download_resultsBtn, {
-      before_download()
-      download_filenames(NULL)
-      selected <- which(selectedRows())
-      test_selected <- rv$df_history[selected, 'name']
-      folder_name <- file.path(result_root, test_selected)
-      download_filenames(zip_folders(folder_name))
-      shinyjs::hide(id=ns("search_msg"), asis = TRUE)
       
-      output$downloadBtn <- renderUI({
-        req(download_filenames())
-        downloadButton(
-          outputId = ns("downloadZipBtn"),
-          label = "Download your zip file here!",
-          onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
-          class = "download-button"
-        )
-      })
-      shinyjs::show(ns("downloadZipBtn"), asis = TRUE)
+      if(!is.null(rv$df_history)){
+        before_download()
+        download_filenames(NULL)
+        selected <- which(selectedRows())
+        test_selected <- rv$df_history[selected, 'name']
+        folder_name <- file.path(result_root, test_selected)
+        download_filenames(zip_folders(folder_name))
+        shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+        
+        output$downloadBtn <- renderUI({
+          req(download_filenames())
+          downloadButton(
+            outputId = ns("downloadZipBtn"),
+            label = "Download your zip file here!",
+            onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
+            class = "download-button"
+          )
+        })
+        shinyjs::show(ns("downloadZipBtn"), asis = TRUE)
+      }
+      else{
+        showWarningModalNoFiles()
+      }
     })
     
     output$downloadZipBtn <- downloadHandler(
@@ -269,25 +295,29 @@ viewRunsServer <- function(id, rv, store) {
     
     ### handle pdf report
     observeEvent(input$print_summaryBtn, {
-      before_download()
-      selected <- which(selectedRows())
-      test_selected <- rv$df_history[selected, 'name']
-      if(combine_selected_data(selected)){
-        filename1 <- get_pdf_report(rv=rv_results)
+      if(!is.null(rv$df_history)){
+        before_download()
+        selected <- which(selectedRows())
+        test_selected <- rv$df_history[selected, 'name']
+        if(combine_selected_data(selected)){
+          filename1 <- get_pdf_report(rv=rv_results)
+        }
+        pdf_filenames(filename1)
+        shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+        
+        output$downloadBtn <- renderUI({
+          req(pdf_filenames())
+          downloadButton(
+            outputId = ns("downloadPDFBtn"),
+            label = "Download your pdf report here!",
+            onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
+            class = "download-button"
+          )
+        })
+        shinyjs::show(ns("downloadPDFBtn"), asis = TRUE)
+      } else{
+        showWarningModalNoFiles()
       }
-      pdf_filenames(filename1)
-      shinyjs::hide(id=ns("search_msg"), asis = TRUE)
-      
-      output$downloadBtn <- renderUI({
-        req(pdf_filenames())
-        downloadButton(
-          outputId = ns("downloadPDFBtn"),
-          label = "Download your pdf report here!",
-          onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
-          class = "download-button"
-        )
-      })
-      shinyjs::show(ns("downloadPDFBtn"), asis = TRUE)
     })
     
     output$downloadPDFBtn <- downloadHandler(
