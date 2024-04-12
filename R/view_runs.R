@@ -72,10 +72,22 @@ viewRunsServer <- function(id, rv, store) {
     #   ))
     # })
     
+    read_info <- function(name) {
+      file_path <- file.path(result_root, name, "info.txt")
+      if (file.exists(file_path)) {
+        return(readLines(file_path))
+      } else {
+        return("Info Missing")
+      }
+    }
+    
     observeEvent(input$test_history, {
       df_history <- jsonlite::fromJSON(input$test_history)
+      df_history$summary <- apply(df_history, 1, function(row) {
+        read_info(row["name"])
+      })
       df_history$datetime <- as.POSIXct(df_history$date, format = "%m/%d/%Y, %I:%M:%S %p", tz = "UTC")
-      rv$df_history <-  df_history%>% arrange(desc(datetime))  %>% select(-(datetime))
+      rv$df_history <-  df_history%>% arrange(desc(datetime))  %>% select(-(datetime), -(catchment_pop), -(hrs_per_wk), -(max_utilization))
       selectedRows(c(TRUE, rep(FALSE, nrow(rv$df_history)-1)))
       output$history_table <- renderDT({
         checkboxData <- transform(rv$df_history, Select = sprintf('<input type="checkbox" name="row_selected" %s/>', ifelse(selectedRows(), "checked", "")))

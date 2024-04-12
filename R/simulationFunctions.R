@@ -80,35 +80,35 @@ run_pacehrh_simulation <- function(rv, input_file){
     
     new_rv$Mean_ServiceCat <- SS$Mean_ServiceCat %>%
       inner_join(e$scenarios, by= c("Scenario_ID" = "UniqueID")) %>%
-      mutate(test_name = rv$run_name)
+      mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Mean_MonthlyTask <- SS$Mean_AnnualTask %>%
       inner_join(e$scenarios, by=c("Scenario_ID" = "UniqueID")) %>%
-      mutate(test_name = rv$run_name)
+      mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Stats_TotClin <- SS$Stats_TotClin %>%
       inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek")) %>%
-      mutate(test_name = rv$run_name)
+      mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Mean_ClinCat <- SS$Mean_ClinCat %>%
       inner_join(e$scenarios, by=c("Scenario_ID"="UniqueID", "WeeksPerYr")) %>%
-      mutate(test_name = rv$run_name)
+      mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Mean_Total <- SS$Mean_Total %>%
       inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek")) %>%
-      mutate(test_name = rv$run_name)
+      mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Stats_ClinMonth <- SS$Stats_ClinMonth %>%
       inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek")) %>%
-      mutate(test_name = rv$run_name)
+      mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$ByRun_ClinMonth <- SS$ByRun_ClinMonth %>%
       inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek")) %>%
-      mutate(test_name = rv$run_name)
+      mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Mean_Alloc <- SS$Mean_Alloc %>%
       inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr")) %>%
-      mutate(test_name = rv$run_name)
+      mutate(test_name = rv$run_name, region=rv$region)
     
     loggerServer("logger", paste0("Saving Mean_ServiceCat to : ", file.path(results_dir, "Mean_ServiceCat.csv")))
     write.csv(new_rv$Mean_ServiceCat,file.path(results_dir, "Mean_ServiceCat.csv"), row.names = FALSE)
