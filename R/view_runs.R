@@ -35,6 +35,8 @@ viewRunsUI <- function(id) {
       # --------Insert tabs UI calls here, comma separated --------
       plotTabUI(id = ns("slide-4-tab"),
                 title = "By Clinical Category"),
+      plotTabUI(id = ns("by-ClinCatHCW-tab"),
+                title = "By Clinical Category HCW (Vitawave)"),
       plotTabUI(id = ns("by-ServiceCat-tab"),
                 title = "By Service Category"),
       plotTabUI(id = ns("by-ServiceTile-tab"),
@@ -214,6 +216,11 @@ viewRunsServer <- function(id, rv, store) {
           plotTabServer(
             id = "slide-4-tab",
             plotting_function = "get_slide_4_plot",
+            rv = rv_results)
+          
+          plotTabServer(
+            id = "by-ClinCatHCW-tab",
+            plotting_function = "byClinCatHCW_plot",
             rv = rv_results)
           
           plotTabServer(

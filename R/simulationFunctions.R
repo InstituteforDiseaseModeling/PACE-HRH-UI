@@ -78,6 +78,20 @@ run_pacehrh_simulation <- function(rv, input_file){
     new_rv$fertilityrates <- fertilityrates
     new_rv$summarystats  <- SS
     
+    cadreOverheadHrs <- pacehrh::SaveCadreOverheadData(filepath = file.path(results_dir, "cadre_overhead.csv"))
+    cadreOverheadHrs$Year = as.integer(cadreOverheadHrs$Year)
+    AnnualOverheadTime <- cadreOverheadHrs %>% 
+      group_by(Scenario_ID, Year) %>% 
+      dplyr::summarise(CI05 = sum(OverheadTime), 
+                       CI25 = sum(OverheadTime), 
+                       MeanHrs = sum(OverheadTime),
+                       CI75 = sum(OverheadTime), 
+                       CI95 = sum(OverheadTime)) %>% 
+      dplyr::mutate(ClinicalOrNon = "Overhead", ClinicalCat = "-") %>% 
+      filter(Year>=rv$start_year & Year<=rv$end_year)
+    
+    
+    
     new_rv$Mean_ServiceCat <- SS$Mean_ServiceCat %>%
       inner_join(e$scenarios, by= c("Scenario_ID" = "UniqueID")) %>%
       mutate(test_name = rv$run_name, region=rv$region)
@@ -91,11 +105,21 @@ run_pacehrh_simulation <- function(rv, input_file){
       mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Mean_ClinCat <- SS$Mean_ClinCat %>%
-      inner_join(e$scenarios, by=c("Scenario_ID"="UniqueID", "WeeksPerYr")) %>%
+      select(-WeeksPerYr) %>% 
+      rbind(AnnualOverheadTime) %>%
+      inner_join(e$scenarios, by=c("Scenario_ID"="UniqueID")) %>%
       mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Mean_Total <- SS$Mean_Total %>%
-      inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr", "HrsPerWeek")) %>%
+      select(-WeeksPerYr, -HrsPerWeek) %>% 
+      rbind(AnnualOverheadTime[,1:7]) %>% 
+      group_by(Scenario_ID, Year) %>% 
+      dplyr::summarise(CI05 = sum(CI05),
+                       CI25 = sum(CI25),
+                       MeanHrs = sum(MeanHrs),
+                       CI75 = sum(CI75),
+                       CI95 = sum(CI95)) %>%
+      inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID")) %>%
       mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Stats_ClinMonth <- SS$Stats_ClinMonth %>%
@@ -107,7 +131,16 @@ run_pacehrh_simulation <- function(rv, input_file){
       mutate(test_name = rv$run_name, region=rv$region)
     
     new_rv$Mean_Alloc <- SS$Mean_Alloc %>%
-      inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID", "WeeksPerYr")) %>%
+      separate(col = Cadre,into =  c("Role_ID", "suffix"), sep = "_", remove = FALSE) %>% 
+      left_join(cadreOverheadHrs, by = c("Scenario_ID","Role_ID", "Year")) %>% 
+      left_join(rv$cadreroles, by = c("Scenario_ID"="ScenarioID", "Role_ID"="RoleID")) %>% 
+      group_by(Scenario_ID, Year, RoleDescription) %>% 
+      dplyr::summarise(CI05 = sum(CI05+OverheadTime), 
+                       CI25 = sum(CI25+OverheadTime), 
+                       CI50 = sum(CI50+OverheadTime), 
+                       CI75 = sum(CI75+OverheadTime), 
+                       CI95 = sum(CI95+OverheadTime)) %>%
+      inner_join(e$scenarios, by= c("Scenario_ID"="UniqueID")) %>%
       mutate(test_name = rv$run_name, region=rv$region)
     
     loggerServer("logger", paste0("Saving Mean_ServiceCat to : ", file.path(results_dir, "Mean_ServiceCat.csv")))

@@ -147,6 +147,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         rv$task_input <- read_excel(rv$input_file, sheet = rv$task_sheet)
         rv$pop_input <- read_excel(rv$input_file, sheet = "TotalPop")
         rv$pop_values <- read_excel(rv$input_file, sheet = rv$scenarios_input$sheet_PopValues)
+        rv$cadreroles <- read_excel(rv$input_file, sheet="CadreRoles")
       }
    
       if(sim_pages[rv$page]=="Configuration"){
