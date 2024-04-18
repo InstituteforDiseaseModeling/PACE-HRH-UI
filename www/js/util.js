@@ -34,3 +34,40 @@ function get_test_names(names, history, notify ="false"){
     Shiny.setInputValue(notify, "true", {priority: 'event'});
   }
 }              
+
+
+function delete_tests(namesToDelete, history, history_shiny_table) {
+  // Get the JSON string from local storage
+  var arr_history = localStorage.getItem("test_names");
+  
+  // Parse the JSON string into an array
+  var data = JSON.parse(arr_history);
+  
+  // Filter out entries with names specified in namesToDelete array
+  var filteredData = data.filter(function(entry) {
+    return !namesToDelete.includes(entry.name);
+  });
+  
+  // Convert the filtered data back to JSON string
+  var filteredDataString = JSON.stringify(filteredData);
+  
+  // Save the filtered data back to local storage
+  localStorage.setItem("test_names", filteredDataString);
+  
+  var table_element = document.getElementById(history_shiny_table);
+  // Delete test_names if empty
+  // hide the caller shinytable if data does not exist
+  if (filteredData.length === 0) {
+    localStorage.removeItem("test_names");
+    if (table_element) {
+        table_element.style.display = 'none';
+    }
+  }
+  else{
+    if (table_element) {
+        table_element.style.display = 'block';
+    }
+  }
+  var arr_history = localStorage.getItem('test_names');
+  Shiny.setInputValue(history, arr_history, {priority: 'event'});
+}
