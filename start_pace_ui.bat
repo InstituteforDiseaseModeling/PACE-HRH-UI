@@ -28,10 +28,10 @@ IF %offline%==TRUE (
 ) ELSE (
     ECHO You cannot run it with offline mode.
     GOTO prompt
-
 )
 
 :prompt
+SET UPGRADE=FALSE
 ECHO Online installation is needed, please specify installation folder:
 SET root_dir=
 SET /P root_dir="App Directory: "
@@ -52,16 +52,18 @@ IF "%root_dir%"=="" (
     GOTO prompt
 ) ELSE IF NOT EXIST "%root_dir%" (
   MKDIR "%root_dir%"
-  SET UPGRADE=FALSE
   GOTO continue
-) ELSE (
+) ELSE IF EXIST "%root_dir%\PACE-HRH-UI" (
   GOTO askUpgrade	
+) ELSE (
+  GOTO continue
 )
 
 :askUpgrade
 ECHO.
 ECHO Do you want to overwrite and update code in this folder?
 ECHO Type Y to update and continue, or N to skip.
+ECHO If you want to update the code, please make sure to save 'pace_results' directory in %APP_DIR% in case of failure
 ECHO.
 SET /p confirmation=Your choice:
 IF /i "%confirmation%"=="Y" (
@@ -98,11 +100,27 @@ IF NOT EXIST "%APP_DIR%" (
 
 
 ECHO "Setup will download and extract source code to %APP_DIR%"
-if not exist %DOWNLOAD_PATH% (
+IF NOT EXIST %DOWNLOAD_PATH% (
   curl -L -o %DOWNLOAD_PATH% "%CODE_URL%"
 )
 
-tar -xf %DOWNLOAD_PATH% -C "%APP_DIR%"
+IF EXIST %DOWNLOAD_PATH% (
+  tar -xf %DOWNLOAD_PATH% -C "%APP_DIR%"
+) ELSE (
+  ECHO Source code Download failed
+  ECHO Please make sure the release version exists and try again!
+  PAUSE > nul
+  EXIT /b 1
+)
+
+IF %ERRORLEVEL% NEQ 0 (
+    ECHO Error: Failed to extract %DOWNLOAD_PATH%
+    ECHO Please make sure the release version exists and try again!
+    PAUSE > nul
+    DEL /F %DOWNLOAD_PATH%
+    EXIT /b 1
+)
+
 
 REM SET the working directory
 PUSHD "%APP_DIR%"
@@ -222,7 +240,7 @@ PAUSE > nul
 
 REM Find and terminate the Rscript process that runs the Shiny app
 ECHO Terminating the Shiny app...
-TASKKILL /IM Rscript.exe /f 2>nul
+TASKKILL /FI "IMAGENAME eq %R_PATH%" /f 2>nul
 
 ECHO PACE-HRH app terminated.
 exit
@@ -247,6 +265,7 @@ FOR /d /r "%APP_DIR%" %%i in (*) do (
     )
 )
 
+
 FOR /d %%i in ("%APP_DIR%\*") do (
     REM Check if the directory name is 'pace_results'
     ECHO Deleting "%%i"
@@ -259,4 +278,13 @@ FOR /d %%i in ("%APP_DIR%\*") do (
         exit /b 1
     )
 )
+
+REM Check the exit code of delete section to be sure
+IF %ERRORLEVEL% NEQ 0 (
+    ECHO Cleanup failed to delete existing files
+    ECHO Please rerun the script, if the problem exists, you will need to delete "%APP_DIR%" manually.
+    PAUSE > nul
+    exit /b 1
+)
+
 GOTO continue

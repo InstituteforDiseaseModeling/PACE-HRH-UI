@@ -1,9 +1,3 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
-
 # PACE-HRH-UI
 
 In the rapidly evolving landscape of population health management, there
@@ -49,8 +43,7 @@ local storage.
 
 To install the app in a separate environment: <br> Download
 `start_pace_ui.bat` and run it by double clicking it (or open a
-commandline window to your downloaded folder to run it). This will
-prompt you a [step by step guide](./Setup.md) for installation and
+commandline window to your downloaded folder to run it). If this is your first time installing, please follow the [step by step guide](./Setup.md) for installation and
 running the app. <br> Once installed on your desired folder, for future
 use, you should go to the subfolder with name PACE-HRH-UI-{version} and
 run the start_pace_ui.bat from there, this will start the app in offline mode and open
@@ -58,7 +51,9 @@ your default browser so that you can interact with it. To close the app,
 simply press any key on the command prompt window. <br> You can zip this
 pre-installed self-contained folder and send it to those who do not have
 internet access, they should be able to run `start_pace_ui.bat` without
-installation. <br>
+installation. <br><br>
+If you need to update the app when there is [new releases](https://github.com/InstituteforDiseaseModeling/PACE-HRH-UI/releases) available, 
+please follow the [upgrade existing app guide](./Update.md)
 
 ### Screenshots
 
