@@ -20,7 +20,8 @@ viewRunsUI <- function(id) {
                 # actionButton(ns("refreshBtn"), "Refresh Results"),
                 actionButton(ns("compare_btn"), "Show / Compare Result"),
                 actionButton(ns("download_resultsBtn"), "Download Results (.csv)", ),
-                actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots")
+                actionButton(ns("print_summaryBtn"), "Print PDF of Summary Plots"),
+                actionButton(ns("deleteResultsBtn"), "Delete selected results"),
             )
       )
     ),
@@ -81,11 +82,14 @@ viewRunsServer <- function(id, rv, store) {
       }
     }
     
-    showWarningModalNoFiles <- function() {
+    showWarningModalNoFiles <- function(text="") {
+      if (text==""){
+        text <- "You do not have any result to view, please run at least one simulation!"
+      }
       shiny::showModal(
         modalDialog(
           title = "Warning",
-          "You do not have any result to view, please run at least one simulation!",
+          text,
           footer = tagList(
             actionButton(ns("closeNoFileModal"), "Close", icon = icon("times"))
           )
@@ -98,6 +102,12 @@ viewRunsServer <- function(id, rv, store) {
     
     observeEvent(input$test_history, {
       df_history <- jsonlite::fromJSON(input$test_history)
+      if (length(df_history) == 0){
+        shinyjs::hide(id=ns("history_table"), asis = TRUE)
+      } else{
+        shinyjs::show(id=ns("history_table"), asis = TRUE)
+      }
+      
       df_history$summary <- apply(df_history, 1, function(row) {
         read_info(row["name"])
       })
@@ -187,15 +197,63 @@ viewRunsServer <- function(id, rv, store) {
     
     observeEvent(input$compare_btn, {
       if(!is.null(rv$df_history)){
-        shinyjs::show(id=ns("search_msg"), asis = TRUE)
         selected <- which(selectedRows())
-        print(paste0("selected ", length(selected)))
-        test_selected <- rv$df_history[selected, 'name']
-        redraw(combine_selected_data(selected))    
-        shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+        if (length(selected) >0 ){
+          shinyjs::show(id=ns("search_msg"), asis = TRUE)
+          # print(paste0("selected ", length(selected)))
+          test_selected <- rv$df_history[selected, 'name']
+          redraw(combine_selected_data(selected))    
+          shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+        }
+        else{
+          showWarningModalNoFiles("You did not select any result to compare.")
+        }
       }
       else{
         showWarningModalNoFiles()
+      }
+    })
+    
+    observeEvent(input$deleteResultsBtn, {
+      if(!is.null(rv$df_history)){
+        selected <- which(selectedRows())
+        if (length(selected) > 0)
+        {
+          showModal(
+            modalDialog(
+              title = "Delete Results",
+              "Are you sure you want to delete the selected results?",
+              footer = tagList(
+                actionButton(ns("deleteResultsConfirmBtn"), "Yes"),
+                modalButton("No")
+              )
+            )
+          )
+        }else{
+          showWarningModalNoFiles("You did not select any result to delete.")
+        }
+      }
+    })
+    
+    observeEvent(input$deleteResultsConfirmBtn, {
+      shiny::removeModal()
+      selected <- which(selectedRows())
+      if (length(selected) > 0)
+      {
+        test_selected <- rv$df_history[selected, 'name']
+        tryCatch({
+          for (testname in test_selected){
+            # remove localstorage entries
+            shinyjs::runjs(sprintf("delete_tests(['%s'], '%s', '%s')", testname, ns("test_history"), ns("history_table")))
+            resultdir <- file.path(result_root, testname)
+            if (dir.exists(resultdir)){
+              unlink(resultdir, recursive = TRUE)
+            }
+          }
+        },
+        error = function(e){
+            session$sendCustomMessage("notify_handler", paste0("Error occurred deleting ", test_selected))
+        })
       }
     })
     
@@ -252,24 +310,29 @@ viewRunsServer <- function(id, rv, store) {
     observeEvent(input$download_resultsBtn, {
       
       if(!is.null(rv$df_history)){
-        before_download()
         download_filenames(NULL)
         selected <- which(selectedRows())
-        test_selected <- rv$df_history[selected, 'name']
-        folder_name <- file.path(result_root, test_selected)
-        download_filenames(zip_folders(folder_name))
-        shinyjs::hide(id=ns("search_msg"), asis = TRUE)
-        
-        output$downloadBtn <- renderUI({
-          req(download_filenames())
-          downloadButton(
-            outputId = ns("downloadZipBtn"),
-            label = "Download your zip file here!",
-            onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
-            class = "download-button"
-          )
-        })
-        shinyjs::show(ns("downloadZipBtn"), asis = TRUE)
+        if (length(selected) > 0){
+          before_download()
+          test_selected <- rv$df_history[selected, 'name']
+          folder_name <- file.path(result_root, test_selected)
+          download_filenames(zip_folders(folder_name))
+          shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+          
+          output$downloadBtn <- renderUI({
+            req(download_filenames())
+            downloadButton(
+              outputId = ns("downloadZipBtn"),
+              label = "Download your zip file here!",
+              onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
+              class = "download-button"
+            )
+          })
+          shinyjs::show(ns("downloadZipBtn"), asis = TRUE)
+        }
+        else{
+          showWarningModalNoFiles("You did not select any result to download.")
+        }
       }
       else{
         showWarningModalNoFiles()
@@ -296,25 +359,30 @@ viewRunsServer <- function(id, rv, store) {
     ### handle pdf report
     observeEvent(input$print_summaryBtn, {
       if(!is.null(rv$df_history)){
-        before_download()
         selected <- which(selectedRows())
-        test_selected <- rv$df_history[selected, 'name']
-        if(combine_selected_data(selected)){
-          filename1 <- get_pdf_report(rv=rv_results)
+        if (length(selected) > 0){
+          before_download()
+          test_selected <- rv$df_history[selected, 'name']
+          if(combine_selected_data(selected)){
+            filename1 <- get_pdf_report(rv=rv_results)
+          }
+          pdf_filenames(filename1)
+          shinyjs::hide(id=ns("search_msg"), asis = TRUE)
+          
+          output$downloadBtn <- renderUI({
+            req(pdf_filenames())
+            downloadButton(
+              outputId = ns("downloadPDFBtn"),
+              label = "Download your pdf report here!",
+              onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
+              class = "download-button"
+            )
+          })
+          shinyjs::show(ns("downloadPDFBtn"), asis = TRUE)
         }
-        pdf_filenames(filename1)
-        shinyjs::hide(id=ns("search_msg"), asis = TRUE)
-        
-        output$downloadBtn <- renderUI({
-          req(pdf_filenames())
-          downloadButton(
-            outputId = ns("downloadPDFBtn"),
-            label = "Download your pdf report here!",
-            onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_clicked")),
-            class = "download-button"
-          )
-        })
-        shinyjs::show(ns("downloadPDFBtn"), asis = TRUE)
+        else{
+          showWarningModalNoFiles("You did not select any result to print.")
+        }
       } else{
         showWarningModalNoFiles()
       }
