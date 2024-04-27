@@ -1,7 +1,7 @@
 cls
 setlocal
 @echo off
-SET VERSION=1.0.0
+SET VERSION=1.0.1
 
 REM Determine if this a git repository
 IF EXIST ".git" (
@@ -254,11 +254,13 @@ FOR /d /r "%APP_DIR%" %%i in (*) do (
     REM Check if the current directory is named 'pace_results'
     if "%%~nxi"=="pace_results" (
         ECHO 'pace_results' found at: "%%i"
-        move "%%i" "%TEMP%\tmp_pace_hrh_ui" || (
-            ECHO Failed to move 'pace_results' to %TEMP%
+        RD /Q /S "%TEMP%\tmp_pace_hrh_ui" 2>nul
+        MD "%TEMP%\tmp_pace_hrh_ui" 2>NUL
+        MOVE /Y "%%i" "%TEMP%\tmp_pace_hrh_ui" || (
+            ECHO Failed to move 'pace_results' to %TEMP%\tmp_pace_hrh_ui\%RELATIVE_PATH%
             ECHO Please close your application and try again.
             ECHO If there is a permission issue, please contact your IT administrator.
-            ECHO Alternatively, manually remove "%TEMP%\tmp_pace_hrh_ui".
+            ECHO Alternatively, manually save "%%i" and restore files after upgrade.
             PAUSE > nul
             exit /b 1
         )
