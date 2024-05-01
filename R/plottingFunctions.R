@@ -139,6 +139,40 @@ byServiceCat_plot <- function(rv, plotly=TRUE){
   
 }
 
+byCadreRoles_plot <-  function(rv, plotly=TRUE){
+
+  StartYear <-  rv$start_year + 1 
+  EndYear <-  rv$end_year 
+  
+  Cadre_labelled <- rv$Mean_Alloc %>% 
+    filter(CI50!=0 ) %>% 
+    group_by(test_name, Year) %>% 
+    dplyr::mutate(sum_CI50 = sum(CI50), sum_CI05 = sum(CI05), sum_CI95 = sum(CI95)) 
+  
+  plot <-  ggplot(data=Cadre_labelled)+
+    geom_bar(aes(x=Year,y=CI50/WeeksPerYr,fill=RoleDescription),stat="identity",alpha=.9)+
+    geom_line(aes(x=Year,y=sum_CI50/WeeksPerYr),linewidth=1.2)+
+    geom_point(aes(x=Year,y=sum_CI50/WeeksPerYr))+
+    geom_errorbar(aes(x=Year,ymin=sum_CI05/WeeksPerYr, ymax=sum_CI95/WeeksPerYr), colour="black", width=.3)+
+    theme_bw()+
+    scale_x_continuous(breaks =  c(2021,2025, 2030, 2035))+
+    theme(legend.title=element_blank(),legend.position = c(0.02, 0.99), legend.justification = c(0.02, 0.99), 
+          legend.key.size=unit(0.3, 'cm'), legend.direction="vertical", legend.background = element_rect(fill = 'transparent'))+
+    scale_fill_brewer(palette = "Paired", direction = -1)+
+    facet_wrap(~test_name)+
+    labs(x="Year", y="Hours per Week per 5,000 Pop", fill = "Cadre")
+  print(plot)
+  
+  
+  if(plotly){
+    ggplotly(plot)
+  } else{
+    plot
+  }
+  
+}
+
+
 # -----------------by ServiceCat tile plot---------------------
 byServiceTile_plot <- function(rv, plotly=TRUE){
 
