@@ -139,43 +139,29 @@ byServiceCat_plot <- function(rv, plotly=TRUE){
   
 }
 
-byClinCatHCW_plot <-  function(rv, plotly=TRUE){
-  # time allocation by Clinical Category
-  Mean_ClinCat <- rv$Mean_ClinCat
-  temp_clin <- Mean_ClinCat %>% 
-    filter(Year >= rv$start_year & Year <= rv$end_year) %>% 
-    dplyr::mutate(Category = case_when(
-      ClinicalOrNon != "Clinical" ~ ClinicalOrNon,
-      ClinicalOrNon == "Clinical" ~ paste("Clinical -", ClinicalCat))) %>% 
-    dplyr::mutate(Alpha = case_when(
-      ClinicalOrNon == "Clinical" ~ 0.3,
-      ClinicalOrNon != "Clinical" ~ 1)) %>% 
-    dplyr::mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Starting Pop", sep=" "))  
-  temp_clin$Category <- factor(temp_clin$Category,ordered=TRUE,levels=unique(temp_clin$Category))
+byCadreRoles_plot <-  function(rv, plotly=TRUE){
+
+  StartYear <-  rv$start_year + 1 
+  EndYear <-  rv$end_year 
   
-  Mean_Total <- rv$Mean_Total
-  temp_total <- Mean_Total %>% 
-    filter(Year >= rv$start_year  & Year <= rv$end_year) %>% 
-    dplyr::mutate(Scenario_label = paste(test_name, format(BaselinePop, big.mark = ","),"Starting Pop", sep=" "))
+  Cadre_labelled <- rv$Mean_Alloc %>% 
+    filter(CI50!=0 ) %>% 
+    group_by(test_name, Year) %>% 
+    dplyr::mutate(sum_CI50 = sum(CI50), sum_CI05 = sum(CI05), sum_CI95 = sum(CI95)) 
   
-  # ylabel <-  "Hours per Week per Catchment Pop"
-  ylabel <- "# HCWs"
-  maxyval <- max(Mean_Total$CI95/Mean_Total$WeeksPerYr)*1.05
-  hrsperweek <- as.integer(temp_total$HrsPerWeek[1])
-  
-  # Update ggplot code to use the defined color scales
-  plot <- ggplot() +
-    geom_bar(data = temp_clin, aes(x = Year, y = MeanHrs/WeeksPerYr/hrsperweek, fill = Category), stat = "identity", alpha = 0.9) +
-    geom_line(data = temp_total, aes(x = Year, y = MeanHrs/WeeksPerYr/hrsperweek), linewidth = 1.2) +
-    geom_point(data = temp_total, aes(x = Year, y = MeanHrs/WeeksPerYr/hrsperweek)) +
-    geom_errorbar(data = temp_total, aes(x = Year, ymin = CI05/WeeksPerYr/hrsperweek, ymax = CI95/WeeksPerYr/hrsperweek), colour = "black", width = 0.3) +
-    ylim(0, maxyval/hrsperweek) +
-    theme_bw() +
-    facet_wrap(~ Scenario_label) +
-    scale_x_continuous(breaks = seq(rv$start_year, rv$end_year))+
-    # scale_y_continuous(sec.axis = sec_axis(~ . / hrsperweek, name = "# HCWs"))+
-    theme(legend.title = element_blank(), axis.text.x = element_text(angle = -90, vjust = 0.5, hjust = 1)) +
-    ylab(ylabel) + xlab("") + labs(title = "Time Allocation by Clinical Category")
+  plot <-  ggplot(data=Cadre_labelled)+
+    geom_bar(aes(x=Year,y=CI50/WeeksPerYr,fill=RoleDescription),stat="identity",alpha=.9)+
+    geom_line(aes(x=Year,y=sum_CI50/WeeksPerYr),linewidth=1.2)+
+    geom_point(aes(x=Year,y=sum_CI50/WeeksPerYr))+
+    geom_errorbar(aes(x=Year,ymin=sum_CI05/WeeksPerYr, ymax=sum_CI95/WeeksPerYr), colour="black", width=.3)+
+    theme_bw()+
+    scale_x_continuous(breaks =  c(2021,2025, 2030, 2035))+
+    theme(legend.title=element_blank(),legend.position = c(0.02, 0.99), legend.justification = c(0.02, 0.99), 
+          legend.key.size=unit(0.3, 'cm'), legend.direction="vertical", legend.background = element_rect(fill = 'transparent'))+
+    scale_fill_brewer(palette = "Paired", direction = -1)+
+    facet_wrap(~test_name)+
+    labs(x="Year", y="Hours per Week per 5,000 Pop", fill = "Cadre")
+  print(plot)
   
   
   if(plotly){
