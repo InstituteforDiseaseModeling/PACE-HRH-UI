@@ -55,6 +55,9 @@ installation. <br><br>
 If you need to update the app when there is [new releases](https://github.com/InstituteforDiseaseModeling/PACE-HRH-UI/releases) available, 
 please follow the [upgrade existing app guide](./Update.md)
 
+### Note for App Maintainers
+The PACE-HRH-UI app comes with predefined configurations files aim for demo purposes, if you wish to develop your own custom configurations, please follow the [configuration guide](./Configuration.md)
+
 ### Screenshots
 
 -   From Homepage you can start a new simulation from scratch or use a

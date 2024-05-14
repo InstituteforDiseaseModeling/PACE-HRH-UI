@@ -29,4 +29,4 @@ This should open a command prompt window (cmd), you can navigate to the folder w
 5. The script will prompt you for the version of the application you want to install. You can enter the version number you want to install. For example, if you want to install version 1.0.0, you can enter `1.0.0` and press `Enter`. If you just want to use default version, please press `Enter` directly.
 <br><br>
 <img src="./screenshots/Version.png" width="600">
-6. Follow steps as shown in [Installation](Setup.md#installation) section.
+6. Follow steps as shown in <a href="Setup.md#installation-process-">installation</a> section.
