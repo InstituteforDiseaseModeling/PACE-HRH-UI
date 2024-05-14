@@ -53,7 +53,7 @@ sim_tabs <- function(ns){
   ),
   tabPanel(sim_pages[2], 
            fluidRow(
-             column(12, h5(validation_intro_str))
+             column(12, HTML(gsub("\n", "<br>", validation_intro_str)))
            ),
            tabsetPanel(
              id ="validation",

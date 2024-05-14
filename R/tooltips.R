@@ -10,10 +10,11 @@ config_intro_str <- "Edit your key inputs here before you run the model,
 
 # Validation Page
 
-validation_intro_str <- "Examine the plots that reflect the data quality of your inputs. 
-  If you see any red flags, you may want to go back to the previous configuration page and adjust your inputs.
-  "
+validation_intro_str <- "Validate that your data inputs are correct by reviewing these data summary plots. 
+If you find something that does not look correct, navigate to the input Excel file in your project folder, update the values, save the file, and restart this application. The program will reload these input values and you can check again that they have been updated correctly.
+The population pyramid represents the portion of the population that is of a particular age and gender at the start of the modeled timeframe, and should match your current local demographics. Fertility and mortality rates will determine how this population changes over time, and the values should match your current situation. Seasonality is applied to particular tasks performed by the health worker(s) and represents the changes in demand for healthcare throughout the year.
 
+"
 
 # Simulation Page
 
