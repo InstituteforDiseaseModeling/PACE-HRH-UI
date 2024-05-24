@@ -1,5 +1,4 @@
 library(shiny)
-library(shinyStore)
 library(shinyjs)
 library(DT)
 library(bsicons)
@@ -25,9 +24,6 @@ ui <- fluidPage(
                 #imported in headerUI component
                 headerUI("header"),
                 footerUI("footer"),
-                # initialize shinyStore
-                shinyStore::initStore("store", "PACE-HRH-UI-store")
-                
 )
 
 server <- function(input, output,session){
@@ -64,19 +60,26 @@ server <- function(input, output,session){
     )
   }
   
-  greeting_already_shown <- reactive({
-    capture.output(input$store$greeting_modal_shown)
+  firstLoad <- reactiveVal(TRUE)
+  observe({
+    if(isolate(firstLoad())) {
+      # display greeting on first load
+      shinyjs::runjs(sprintf("check_greeting('%s')", "greeting_already_shown"))
+      # Set to FALSE after first execution
+      firstLoad(FALSE)
+    }
   })
+  
   
   observeEvent(input$continue,{
     removeModal()
-    updateStore(session, "greeting_modal_shown", value = "shown")
     message("setting 'greeting_modal_shown' to TRUE")
+    shinyjs::runjs(' localStorage.setItem("greeting_modal_shown", "shown")')
     shinyjs::runjs('let r = (Math.random() + 1).toString(36).substring(7); localStorage.setItem("uid", r);')
   })
   
-  observeEvent(input$store, {
-    if (! grepl("shown", greeting_already_shown(), fixed=TRUE)){
+  observeEvent(input$greeting_already_shown, {
+    if (! grepl("shown", input$greeting_already_shown, fixed=TRUE)){
       message("showing greeting modal")
       greetingModal()
     }

@@ -1,18 +1,17 @@
-FROM rocker/shiny-verse:4
+FROM rocker/shiny-verse:latest
 
 RUN apt-get update
 
-# Install R packages
-COPY install_packages.R .
-RUN Rscript install_packages.R
-RUN R -e "devtools::install_github('trestletech/shinyStore')"
 
 #Copy files
+WORKDIR /srv/shiny-server
 COPY .. /srv/shiny-server/
 
-# Install PACE-HRH R package
-WORKDIR /srv/shiny-server
-RUN R -e "devtools::install_github('InstituteforDiseaseModeling/PACE-HRH', subdir='pacehrh')"
+
+# Install PACE-HRH R packages
+
+RUN Rscript install_packages.R
+
 # expose shiny error
 ENV SHINY_LOG_STDERR=1
 EXPOSE 3838

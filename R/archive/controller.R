@@ -1,7 +1,6 @@
 library(shiny)
 library(shinyjs)
 library(shinyalert)
-library(shinyStore)
 library(shinycssloaders)
 library(shinyWidgets)
 library(pacehrh)
