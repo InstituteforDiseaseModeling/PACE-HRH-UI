@@ -1,5 +1,12 @@
 options(Ncpus = parallel::detectCores())
 
+if (.Platform$OS.type == "unix") {
+  type <- "source"
+}else{
+  type <- "binary"
+}
+
+
 pkgnames <- c(
 'devtools', 'DT', 'shiny', 'shinyjs', 'shinyalert', 'shinyWidgets', 'shinythemes', 'shinycssloaders', 'plotly', 'truncnorm', 'shinyBS', 'openxlsx', 
 'validate','readxl', 'dplyr','ggplot2', 'tidyr', 'kableExtra', 'stringr', 'plyr', 'reshape2', 'scales', 'glue', 'logr', 'tidyverse', 'showtext',
@@ -10,14 +17,13 @@ pkgnames <- c(
 print(paste0("Install Packages from Cran : ", pkgnames))
 install.packages(pkgnames,
                  repos='http://cran.rstudio.com/',
-                 type='binary')
+                 type=type)
 
 library(devtools)
-install_github("trestletech/shinyStore", upgrade="never")
 # Install pacehrh package
 install_github('InstituteforDiseaseModeling/PACE-HRH', 
                subdir='pacehrh',  
-               ref ='1.1.0',
+               ref ='2.0.0',
                force = TRUE, 
                dependencies = TRUE, 
                upgrade="never")

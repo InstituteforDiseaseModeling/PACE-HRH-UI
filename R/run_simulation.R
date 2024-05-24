@@ -19,7 +19,7 @@ sim_tabs <- function(ns){
              ),
              column(6,
                     numericInput(ns("catchment_pop"), div(id=ns("info_catchment_pop"), "Catchment Pop ",  bs_icon("question-circle")), 10000, min=1000, max=100000),
-                    bsPopover(ns("info_catchment_pop"), "Catchment population for simulation, usually set to 10,000", placement = "top", options = list(container = "body")),
+                    bsPopover(ns("info_catchment_pop"), "The average population expected to be served by each health facility for a given region", placement = "top", options = list(container = "body")),
              ),
              
            ),
@@ -41,7 +41,7 @@ sim_tabs <- function(ns){
              ),
              column(6,
                     numericInput(ns("hrh_utilization"), div(id =ns("info_hrh_utilization"), "Target HRH utilization (%) ",  bs_icon("question-circle")), value=100, min=0, max =100, step = 1,),
-                    bsPopover(ns("info_hrh_utilization"), "TBD", placement = "top", options = list(container = "body")),
+                    bsPopover(ns("info_hrh_utilization"), "The percentage of health workers' time expected to be spent working (not including planned time off or sick days)", placement = "top", options = list(container = "body")),
              )
            ),
            fluidRow(
@@ -53,7 +53,7 @@ sim_tabs <- function(ns){
   ),
   tabPanel(sim_pages[2], 
            fluidRow(
-             column(12, h5(validation_intro_str))
+             column(12, HTML(gsub("\n", "<br>", validation_intro_str)))
            ),
            tabsetPanel(
              id ="validation",

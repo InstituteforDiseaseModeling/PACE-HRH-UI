@@ -129,10 +129,13 @@ viewRunsServer <- function(id, rv, store) {
             preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
             drawCallback = JS(
               'function() {',
+              '  var api = this.api();',
+              '  var pageInfo = api.page.info();',
+              sprintf('  Shiny.setInputValue("%s", pageInfo.page + 1);', ns("currentPage")),
               '  Shiny.bindAll(this.api().table().node());',
               '}'
             )
-          ),
+            ),
           callback = JS(
             'function updateSelectedRows(checkbox) {',
             '  var row = $(checkbox).closest("tr");',
@@ -158,6 +161,10 @@ viewRunsServer <- function(id, rv, store) {
         selections[input$rowSelected$index + 1] <- FALSE
         selectedRows(selections)
         session$sendCustomMessage(type = "uncheckCheckbox", input$rowSelected$index)
+      }
+      # stay on the same page
+      if (!is.null(input$currentPage)) {
+        dataTableProxy('history_table') %>% selectPage(as.numeric(input$currentPage))
       }
     })
     

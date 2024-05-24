@@ -13,7 +13,7 @@ IF EXIST ".git" (
 
 
 REM Determine if this is offline mode
-SET "OFFLINE_FOLDERS=R-4.2.2 R config"
+SET "OFFLINE_FOLDERS=R-4.4.0 R config"
 SET offline=TRUE
 FOR %%F IN (%OFFLINE_FOLDERS%) DO (
     IF NOT EXIST "%%F\" (
@@ -22,7 +22,7 @@ FOR %%F IN (%OFFLINE_FOLDERS%) DO (
 )
 IF %offline%==TRUE (
    ECHO All folders exist. No instllation needed.
-   SET R_PATH=.\R-4.2.2\bin\Rscript.exe
+   SET R_PATH=.\R-4.4.0\bin\Rscript.exe
    SET SHINY_DIR=.
    GOTO app
 ) ELSE (
@@ -167,28 +167,28 @@ ECHO You have accepted the terms.
 
 POPD
 
-SET R_PATH="%APP_DIR%\%WORKING_DIR%\R-4.2.2\bin\Rscript.exe"
+SET R_PATH="%APP_DIR%\%WORKING_DIR%\R-4.4.0\bin\Rscript.exe"
 SET SHINY_DIR="%APP_DIR%\%WORKING_DIR%"
 ECHO %R_PATH%
 ECHO "%SHINY_DIR%"
 
 REM Check if R is installed
-SET DOWNLOAD_R_PATH="%root_dir%\R-4.2.2-win.exe"
+SET DOWNLOAD_R_PATH="%root_dir%\R-4.4.0-win.exe"
 ECHO %DOWNLOAD_R_PATH%
 IF EXIST "%R_PATH%" (
     ECHO R is already installed.
 ) ELSE (
     IF NOT EXIST %DOWNLOAD_R_PATH% (
-       ECHO Downloading R 4.2.2...
+       ECHO Downloading R 4.4.0...
        REM Replace the URL with the direct download link to the R installer you want to use
-       curl -o %DOWNLOAD_R_PATH% https://cran.r-project.org/bin/windows/base/old/4.2.2/R-4.2.2-win.exe
+       curl -o %DOWNLOAD_R_PATH% https://cran.r-project.org/bin/windows/base/old/4.4.0/R-4.4.0-win.exe
     )
 
     ECHO Installing R...
     REM Run the installer silently
-    %DOWNLOAD_R_PATH% /VERYSILENT /NORESTART /DIR="%APP_DIR%\%WORKING_DIR%\R-4.2.2"
+    %DOWNLOAD_R_PATH% /VERYSILENT /NORESTART /DIR="%APP_DIR%\%WORKING_DIR%\R-4.4.0"
 
-    ECHO R 4.2.2 installation complete.
+    ECHO R 4.4.0 installation complete.
 
     ECHO Install packages...
     REM Run the R script in silent mode

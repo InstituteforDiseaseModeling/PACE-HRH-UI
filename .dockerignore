@@ -1,0 +1,31 @@
+# Exclude logs and temporary files
+*.log
+*.tmp
+
+# Exclude Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Exclude virtual environments
+venv/
+.env/
+
+# Exclude version control directories and files
+.git
+.gitignore
+
+
+# Exclude IDE/editor specific files
+.vscode/
+.idea
+node_modules
+.Rhistory
+.RData
+.Rbuildignore
+.Rproj.user
+
+# Exclude build / run outputs
+dist/
+build/
+results/

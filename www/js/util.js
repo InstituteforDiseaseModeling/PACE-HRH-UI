@@ -71,3 +71,13 @@ function delete_tests(namesToDelete, history, history_shiny_table) {
   var arr_history = localStorage.getItem('test_names');
   Shiny.setInputValue(history, arr_history, {priority: 'event'});
 }
+
+function check_greeting(shiny_input_name) {
+  var greeting = "none"
+  if (localStorage.getItem('greeting_modal_shown')){
+    greeting = localStorage.getItem('greeting_modal_shown');
+  }
+  Shiny.setInputValue(shiny_input_name, greeting);
+}
+
+
