@@ -121,8 +121,10 @@ headerServer <- function(id, store=NULL) {
           # populate previous run config, let user select it as config
           showModal(
             modalDialog(
-              title = "Select config file from previous run",
-              "Please note that the region data is not supported.",
+              title = "Select previous run to reload assumptions from.",
+              "When you reload from a previous run, the option to change the default region values is not available. If you would like to run a new region, please cancel and instead choose to run a new simulation.",
+              tags$br(),
+              tags$br(),
               DTOutput(ns("dt_select_prev_config")),
               footer = tagList(
                 actionButton(ns("proceedPrevConfigBtn"), "Proceed"),
