@@ -8,9 +8,7 @@ sim_tabs <- function(ns){
   type = "hidden",
   tabPanel(sim_pages[1],
            fluidRow(
-             column(12, 
-                    h5(config_intro_str)
-             ),
+             column(12, HTML(gsub("\n", "<br>", config_intro_str)))
            ),
            fluidRow(
              column(6,
@@ -153,11 +151,11 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       if(sim_pages[rv$page]=="Configuration"){
         if(!rv$show_region){
           isolate(updateSelectInput(session, "region", label = "Region (Unavailable)"))
-          shinyjs::disable("region")
+          shinyjs::hide("region")
         }
         else{
           isolate(updateSelectInput(session, "region", label = "Region"))
-          shinyjs::enable("region")
+          shinyjs::show("region")
         }
       }
     })
@@ -170,8 +168,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         showModal(
           modalDialog(
             title = "Confirmation Needed",
-            "Are you sure you want to proceed? Change to new region will reset your data from the original template, 
-            the data that you previously changed will be lost!",
+            "Are you sure you want to proceed? When you select this region, the application will reload all data from the input file with the corresponding name. This will override any changes that you have made to the configuration (e.g., run years)",
             footer = tagList(
               actionButton(ns("proceedRegionBtn"), "Proceed"),
               actionButton(ns("cancelRegionBtn"), "Cancel")

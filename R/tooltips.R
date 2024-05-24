@@ -3,9 +3,14 @@
 # Configuration Page
 
 config_intro_str <- "Edit your key inputs here before you run the model,
-  The model comes pre-populated with default valuesspecific to your region, 
+  The model comes pre-populated with default values specific to your region, 
   but if you want to edit those, you can use the optional button at the bottom of this screen.
-  "
+  
+  If you would like to use your own configuration files, you can do so.
+  This allows you to input different assumptions about your population pyramid, fertility and mortality rates, and specify a modified list of tasks and disease incidence rates.
+  To do so, please see instructions from: https://github.com/InstituteforDiseaseModeling/PACE-HRH-UI/blob/main/Configuration.md.
+  
+"
 
 
 # Validation Page
