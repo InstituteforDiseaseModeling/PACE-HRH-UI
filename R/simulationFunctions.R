@@ -1,16 +1,24 @@
 # Function to estimate runtime statistics based on iterations
 # TODO: determine the logic to estimate file size and run time
-get_estimated_run_stats <- function (iteration){
+get_estimated_run_stats <- function (iterations, num_tasks, num_years){
   
-  if (iteration >0 ){
-    runtime <- iteration* 10
-    expected_size <-  iteration
+  f <- function(n=1000){
+    matrix_a <- matrix(rnorm(1000),nrow=n, ncol=1000)
+    result <- t(matrix_a) %% matrix_a
   }
+  
+  
+  runtime= -18.51 + .03955 * iterations + .9659 * num_years + .2366 * num_tasks
+  runtime = max(round(runtime / 60), 10)
+  
+  expected_size = -12740 + 18.29 *iterations + 390.5 * num_years + 296.7 * num_tasks
+  expected_size = max(round(expected_size / 1024), 3) 
+  
   
   runtime <- ifelse(runtime >0 , runtime, "--:--:--")
   expected_size <- ifelse(expected_size >0 , expected_size, "--.--")
   
-  result_text <- sprintf("Given your number of replications, This model will take %s seconds to run, 
+  result_text <- sprintf("Given your number of replications, This run time may take up to %s minutes to complete, 
                              The detailed result files, if you choose to download them, will be approximately %s mb.", runtime, expected_size)
   result_text
 }

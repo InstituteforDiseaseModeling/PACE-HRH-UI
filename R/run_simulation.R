@@ -103,7 +103,9 @@ runSimulationUI <- function(id) {
       fluidRow(
         column(12, div(sim_tabs(ns = ns)), class='sim_row'),
       ),
-      
+      fluidRow(
+        column(12, HTML("<br>"))
+      ),
       fluidRow(
         column(2, hidden(div(id = ns("prevDiv"), 
                              actionButton(ns("prevBtn"), "Previous"), align="center"))),
@@ -444,9 +446,11 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
     observe({
       
       rv$trial_num <- ifelse(is.null(input$num_trials), 0, input$num_trials)
+      rv$num_tasks <- nrow(rv$task_input)
+      rv$num_years <- rv$end_year - rv$start_year
       
       output$run_estimate <- renderText({
-        get_estimated_run_stats(rv$trial_num)
+        get_estimated_run_stats(rv$trial_num, rv$num_tasks, rv$num_years)
       })
       
     })
@@ -479,6 +483,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         removeModal()
         output$errorRunName <- renderText({""})
         # Update config again if anything changed before running sim
+        shinyjs::html(id="log-display", "", asis=TRUE)
         shinyjs::show(id="sim_logger_area", asis=TRUE)
         rv$sim_triggered <- TRUE 
         trigger_file_saving(ns)
