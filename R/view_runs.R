@@ -84,7 +84,7 @@ viewRunsServer <- function(id, rv, store) {
       }
     }
     
-    showWarningModalNoFiles <- function(text="") {
+    showWarningModalIllegalFiles <- function(text="") {
       if (text==""){
         text <- "You do not have any result to view, please run at least one simulation!"
       }
@@ -157,11 +157,11 @@ viewRunsServer <- function(id, rv, store) {
       selectedRows(selections)
       
       # only allow up to 4 comparison
-      if (sum(selections) > 4) {
-        selections[input$rowSelected$index + 1] <- FALSE
-        selectedRows(selections)
-        session$sendCustomMessage(type = "uncheckCheckbox", input$rowSelected$index)
-      }
+      # if (sum(selections) > 4) {
+      #   selections[input$rowSelected$index + 1] <- FALSE
+      #   selectedRows(selections)
+      #   session$sendCustomMessage(type = "uncheckCheckbox", input$rowSelected$index)
+      # }
       # stay on the same page
       if (!is.null(input$currentPage)) {
         dataTableProxy('history_table') %>% selectPage(as.numeric(input$currentPage))
@@ -207,19 +207,22 @@ viewRunsServer <- function(id, rv, store) {
     observeEvent(input$compare_btn, {
       if(!is.null(rv$df_history)){
         selected <- which(selectedRows())
-        if (length(selected) >0 ){
+        if (length(selected) >0 & length(selected) <= 4){
           shinyjs::show(id=ns("search_msg"), asis = TRUE)
           # print(paste0("selected ", length(selected)))
           test_selected <- rv$df_history[selected, 'name']
           redraw(combine_selected_data(selected))    
           shinyjs::hide(id=ns("search_msg"), asis = TRUE)
         }
+        else if (length(selected) > 4){
+          showWarningModalIllegalFiles("You can only select up to four results to compare.")
+        }
         else{
-          showWarningModalNoFiles("You did not select any result to compare.")
+          showWarningModalIllegalFiles("You did not select any result to compare.")
         }
       }
       else{
-        showWarningModalNoFiles()
+        showWarningModalIllegalFiles()
       }
     })
     
@@ -239,7 +242,7 @@ viewRunsServer <- function(id, rv, store) {
             )
           )
         }else{
-          showWarningModalNoFiles("You did not select any result to delete.")
+          showWarningModalIllegalFiles("You did not select any result to delete.")
         }
       }
     })
@@ -277,8 +280,7 @@ viewRunsServer <- function(id, rv, store) {
           ))
           rv$sim_refresh <- FALSE   
         }
-      
-          if (redraw()){
+       if (redraw()){
             plotTabServer(
               id = "slide-4-tab",
               plotting_function = "get_slide_4_plot",
@@ -311,6 +313,7 @@ viewRunsServer <- function(id, rv, store) {
             
             redraw(FALSE)
           }
+         
        
     })
     
@@ -346,11 +349,11 @@ viewRunsServer <- function(id, rv, store) {
           shinyjs::show(ns("downloadZipBtn"), asis = TRUE)
         }
         else{
-          showWarningModalNoFiles("You did not select any result to download.")
+          showWarningModalIllegalFiles("You did not select any result to download.")
         }
       }
       else{
-        showWarningModalNoFiles()
+        showWarningModalIllegalFiles()
       }
     })
     
@@ -396,10 +399,10 @@ viewRunsServer <- function(id, rv, store) {
           shinyjs::show(ns("downloadPDFBtn"), asis = TRUE)
         }
         else{
-          showWarningModalNoFiles("You did not select any result to print.")
+          showWarningModalIllegalFiles("You did not select any result to print.")
         }
       } else{
-        showWarningModalNoFiles()
+        showWarningModalIllegalFiles()
       }
     })
     
