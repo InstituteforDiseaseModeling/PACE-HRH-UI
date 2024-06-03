@@ -2,24 +2,38 @@
 # TODO: determine the logic to estimate file size and run time
 get_estimated_run_stats <- function (iterations, num_tasks, num_years){
   
-  f <- function(n=1000){
-    matrix_a <- matrix(rnorm(1000),nrow=n, ncol=1000)
-    result <- t(matrix_a) %% matrix_a
+  #Function to generate scaling ratio
+  run_benchmark = function(n=200){
+    
+    reference <- 0.09344006 # Time in seconds that a fast computer takes to run this benchmark 
+    
+    #Start timing
+    start <- Sys.time() 
+    matrix_a <- matrix(rnorm(n*1000),nrow=n, ncol=1000)
+    # Perform the big computation 
+    result <- t(matrix_a) %*% matrix_a
+    timeelapsed <- Sys.time() - start # Stop timing
+    
+    ratio <- as.numeric(timeelapsed) / reference
+    
+    return(ratio)
   }
   
+  scalingratio <- run_benchmark() * 1.10
   
   runtime= -18.51 + .03955 * iterations + .9659 * num_years + .2366 * num_tasks
-  runtime = max(round(runtime / 60), 10)
+  runtime = runtime * scalingratio
+  runtime = max(round(runtime / 60), 1)
   
   expected_size = -12740 + 18.29 *iterations + 390.5 * num_years + 296.7 * num_tasks
-  expected_size = max(round(expected_size / 1024), 3) 
+  expected_size = max(round(expected_size), 3) 
   
   
   runtime <- ifelse(runtime >0 , runtime, "--:--:--")
   expected_size <- ifelse(expected_size >0 , expected_size, "--.--")
   
   result_text <- sprintf("Given your number of replications, This run time may take up to %s minutes to complete, 
-                             The detailed result files, if you choose to download them, will be approximately %s mb.", runtime, expected_size)
+                             The detailed result files, if you choose to download them, will be approximately %s KB.", runtime, expected_size)
   result_text
 }
 
