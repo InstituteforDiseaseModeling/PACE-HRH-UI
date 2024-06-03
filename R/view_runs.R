@@ -31,22 +31,22 @@ viewRunsUI <- function(id) {
     fluidRow(
       div(id = ns("search_msg"), "Searching and processing results, this may take awhile...", div(class = "spinner"), style = "display: none;"),
     ),
-    tabsetPanel(
-      id = "main-tabs",
-      # --------Insert tabs UI calls here, comma separated --------
-      plotTabUI(id = ns("slide-4-tab"),
-                title = "By Clinical Category"),
-      plotTabUI(id = ns("by-CadreRoles-tab"),
-                title = "By Cadre Roles"),
-      plotTabUI(id = ns("by-ServiceCat-tab"),
-                title = "By Service Category"),
-      plotTabUI(id = ns("by-ServiceTile-tab"),
-                  title = "By Service Category Tiles"),
-      plotTabUI(id = ns("service-over-time-tab"),
-                title = "Service change over time"),
-      plotTabUI(id = ns("seasonality-tab"),
-                title = "Seasonality"),
-    ),
+      tabsetPanel(
+        id = "main-tabs",
+        # --------Insert tabs UI calls here, comma separated --------
+        plotTabUI(id = ns("slide-4-tab"),
+                  title = "By Clinical Category"),
+        plotTabUI(id = ns("by-CadreRoles-tab"),
+                  title = "By Cadre Roles"),
+        plotTabUI(id = ns("by-ServiceCat-tab"),
+                  title = "By Service Category"),
+        plotTabUI(id = ns("by-ServiceTile-tab"),
+                    title = "By Service Category Tiles"),
+        plotTabUI(id = ns("service-over-time-tab"),
+                  title = "Service change over time"),
+        plotTabUI(id = ns("seasonality-tab"),
+                  title = "Seasonality"),
+      ),
   )
   
 }
@@ -259,6 +259,7 @@ viewRunsServer <- function(id, rv, store) {
               unlink(resultdir, recursive = TRUE)
             }
           }
+          shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("test_names_loaded"), ns("test_history")))
         },
         error = function(e){
             session$sendCustomMessage("notify_handler", paste0("Error occurred deleting ", test_selected))
@@ -277,39 +278,39 @@ viewRunsServer <- function(id, rv, store) {
           rv$sim_refresh <- FALSE   
         }
       
-        if (redraw()){
-          plotTabServer(
-            id = "slide-4-tab",
-            plotting_function = "get_slide_4_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "by-CadreRoles-tab",
-            plotting_function = "byCadreRoles_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "by-ServiceCat-tab",
-            plotting_function = "byServiceCat_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "by-ServiceTile-tab",
-            plotting_function = "byServiceTile_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "service-over-time-tab",
-            plotting_function = "serviceOverTime_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "seasonality-tab",
-            plotting_function = "seasonality_plot",
-            rv = rv_results)
-          
-          redraw(FALSE)
-        }
+          if (redraw()){
+            plotTabServer(
+              id = "slide-4-tab",
+              plotting_function = "get_slide_4_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "by-CadreRoles-tab",
+              plotting_function = "byCadreRoles_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "by-ServiceCat-tab",
+              plotting_function = "byServiceCat_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "by-ServiceTile-tab",
+              plotting_function = "byServiceTile_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "service-over-time-tab",
+              plotting_function = "serviceOverTime_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "seasonality-tab",
+              plotting_function = "seasonality_plot",
+              rv = rv_results)
+            
+            redraw(FALSE)
+          }
        
     })
     

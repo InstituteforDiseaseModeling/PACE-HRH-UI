@@ -38,7 +38,7 @@ function get_test_names(names, history, notify ="false"){
 
 function delete_tests(namesToDelete, history, history_shiny_table) {
   // Get the JSON string from local storage
-  var arr_history = localStorage.getItem("test_names");
+  var arr_history = localStorage.getItem("test_names") || [];
   
   // Parse the JSON string into an array
   var data = JSON.parse(arr_history);
@@ -68,8 +68,6 @@ function delete_tests(namesToDelete, history, history_shiny_table) {
         table_element.style.display = 'block';
     }
   }
-  var arr_history = localStorage.getItem('test_names');
-  Shiny.setInputValue(history, arr_history, {priority: 'event'});
 }
 
 function check_greeting(shiny_input_name) {
