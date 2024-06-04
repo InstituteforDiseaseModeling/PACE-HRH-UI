@@ -157,21 +157,29 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       shinyjs::show(ns("wait_msg"), asis=TRUE)
       report <- ValidateConfig(rv$input_file)
       if (!is.null(report)){
-        output$download_validation_report <- renderUI({
-          downloadButton(ns("downloadValidationData"),
-                         "Download Validation Report",
-                         icon = icon("download"),
-                         onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_report_clicked"))
-                         )
-        })
-        output$downloadValidationData <- downloadHandler(
-          filename = function() {
-            paste("validation_report.html")
-          },
-          content = function(file) {
-            file.copy(report, file)
-          }
-        ) 
+        # report may contain error
+        if (!file.exists(report)){
+          output$validate_result_html <- renderUI({
+            HTML(report)
+          })
+        }
+        else{
+          output$download_validation_report <- renderUI({
+            downloadButton(ns("downloadValidationData"),
+                           "Download Validation Report",
+                           icon = icon("download"),
+                           onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_report_clicked"))
+            )
+          })
+          output$downloadValidationData <- downloadHandler(
+            filename = function() {
+              paste("validation_report.html")
+            },
+            content = function(file) {
+              file.copy(report, file)
+            }
+          ) 
+        }
       }
       else{
         output$download_validation_report <- renderUI({

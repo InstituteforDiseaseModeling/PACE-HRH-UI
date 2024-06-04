@@ -217,7 +217,7 @@ ValidateConfig <- function(input_file){
       
       report <- file.path(logdir, outfilename)
     }, error = function(e){
-      report <- NULL
+      report <- paste0("An error occurred: ", e$message)
     }
   )
   report
