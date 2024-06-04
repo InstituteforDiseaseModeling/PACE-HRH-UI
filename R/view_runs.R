@@ -31,24 +31,26 @@ viewRunsUI <- function(id) {
     fluidRow(
       div(id = ns("search_msg"), "Searching and processing results, this may take awhile...", div(class = "spinner"), style = "display: none;"),
     ),
-      tabsetPanel(
-        id = "main-tabs",
-        # --------Insert tabs UI calls here, comma separated --------
-        plotTabUI(id = ns("slide-4-tab"),
-                  title = "By Clinical Category"),
-        plotTabUI(id = ns("by-CadreRoles-tab"),
-                  title = "By Cadre Roles"),
-        plotTabUI(id = ns("by-ServiceCat-tab"),
-                  title = "By Service Category"),
-        plotTabUI(id = ns("by-ServiceTile-tab"),
+      div(
+        id = ns("plot_area_container"),
+        tabsetPanel(
+          id = "main-tabs",
+          # --------Insert tabs UI calls here, comma separated --------
+          plotTabUI(id = ns("slide-4-tab"),
+                    title = "By Clinical Category"),
+          plotTabUI(id = ns("by-CadreRoles-tab"),
+                    title = "By Cadre Roles"),
+          plotTabUI(id = ns("by-ServiceCat-tab"),
+                    title = "By Service Category"),
+          plotTabUI(id = ns("by-ServiceTile-tab"),
                     title = "By Service Category Tiles"),
-        plotTabUI(id = ns("service-over-time-tab"),
-                  title = "Service change over time"),
-        plotTabUI(id = ns("seasonality-tab"),
-                  title = "Seasonality"),
-      ),
+          plotTabUI(id = ns("service-over-time-tab"),
+                    title = "Service change over time"),
+          plotTabUI(id = ns("seasonality-tab"),
+                    title = "Seasonality"),
+        ),
+      )
   )
-  
 }
 
 # Server logic for the view runs module
@@ -256,7 +258,7 @@ viewRunsServer <- function(id, rv, store) {
         tryCatch({
           for (testname in test_selected){
             # remove localstorage entries
-            shinyjs::runjs(sprintf("delete_tests(['%s'], '%s', '%s')", testname, ns("test_history"), ns("history_table")))
+            shinyjs::runjs(sprintf("delete_tests(['%s'], '%s', '%s', '%s')", testname, ns("test_history"), ns("history_table"), ns("plot_area_container")))
             resultdir <- file.path(result_root, testname)
             if (dir.exists(resultdir)){
               unlink(resultdir, recursive = TRUE)
@@ -281,6 +283,7 @@ viewRunsServer <- function(id, rv, store) {
           rv$sim_refresh <- FALSE   
         }
        if (redraw()){
+            shinyjs::show(ns("plot_area_container"), asis = TRUE)
             plotTabServer(
               id = "slide-4-tab",
               plotting_function = "get_slide_4_plot",

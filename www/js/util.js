@@ -36,7 +36,7 @@ function get_test_names(names, history, notify ="false"){
 }              
 
 
-function delete_tests(namesToDelete, history, history_shiny_table) {
+function delete_tests(namesToDelete, history, history_shiny_table, existing_plot) {
   // Get the JSON string from local storage
   var arr_history = localStorage.getItem("test_names") || [];
   
@@ -55,17 +55,24 @@ function delete_tests(namesToDelete, history, history_shiny_table) {
   localStorage.setItem("test_names", filteredDataString);
   
   var table_element = document.getElementById(history_shiny_table);
+  var plot_element = document.getElementById(existing_plot);
   // Delete test_names if empty
   // hide the caller shinytable if data does not exist
   if (filteredData.length === 0) {
     localStorage.removeItem("test_names");
     if (table_element) {
-        table_element.style.display = 'none';
+      table_element.style.display = 'none';
+    }
+    if(plot_element){
+      plot_element.style.display = 'none';
     }
   }
   else{
     if (table_element) {
-        table_element.style.display = 'block';
+      table_element.style.display = 'block';
+    }
+    if(plot_element){
+      plot_element.style.display = 'block';
     }
   }
 }
