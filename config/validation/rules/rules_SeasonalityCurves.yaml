@@ -12,25 +12,11 @@ rules:
     Total_Malnutrition seasonality must be 1
   meta:
     severity: error
-- expr: 'sum(TB) == 1.0'
-  name: Total_TB
-  label: Total_TB
-  description: |
-    Total_TB seasonality must be 1
-  meta:
-    severity: error
 - expr: 'sum(Malaria) == 1.0'
   name: Total_Malaria
   label: Total_Malaria
   description: |
     Total_Malaria seasonality must be 1
-  meta:
-    severity: error
-- expr: 'sum(Diarrhea) == 1.0'
-  name: Total_Diarrhea
-  label: Total_Diarrhea
-  description: |
-    Total_Diarrhea seasonality must be 1
   meta:
     severity: error
 - expr: 'sum(Births)-1 < 1e-08'

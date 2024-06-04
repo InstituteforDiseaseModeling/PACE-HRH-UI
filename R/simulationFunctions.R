@@ -201,3 +201,24 @@ run_pacehrh_simulation <- function(rv, input_file){
   })
   return(new_rv)
 }
+
+# Run validation config
+ValidateConfig <- function(input_file){
+  logdir <- tempdir()
+  outfilename <- basename(sub("\\.xlsx$", ".html", input_file))
+  report <- NULL
+  tryCatch(
+    {
+      rmarkdown::render(input = "validation_report.Rmd",
+                        output_format = "html_document",
+                        output_file = outfilename, 
+                        output_dir = logdir,
+                        params = list(inputFile = input_file, outputDir = logdir))
+      
+      report <- file.path(logdir, outfilename)
+    }, error = function(e){
+      report <- NULL
+    }
+  )
+  report
+}
