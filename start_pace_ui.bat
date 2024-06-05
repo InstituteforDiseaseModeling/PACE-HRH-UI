@@ -191,13 +191,13 @@ IF EXIST "%R_PATH%" (
     ECHO R 4.4.0 installation complete.
 
     REM Install pandoc
-    SET PANDOC_URL=https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-windows-x86_64.msi
-    set DOWNLOAD_PATH=%~dp0pandoc-3.2-windows-x86_64.msi
+    SET DOWNLOAD_PANDOC_PATH=pandoc-3.2-windows-x86_64.msi
     ECHO Downloading Pandoc...
-    curl -L %PANDOC_URL% -o %DOWNLOAD_PANDOC_PATH%
-    ECHO "Installing Pandoc
-    msiexec /i %DOWNLOAD_PANDOC_PATH% /quiet /norestart
+    curl -o %DOWNLOAD_PANDOC_PATH% https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-windows-x86_64.msi
+    ECHO Installing Pandoc
+    CMD /c "msiexec /i %DOWNLOAD_PANDOC_PATH% /quiet /norestart"
     DEL %DOWNLOAD_PANDOC_PATH%
+
 
     ECHO Install packages...
     REM Run the R script in silent mode
