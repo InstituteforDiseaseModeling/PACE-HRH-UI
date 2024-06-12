@@ -316,7 +316,7 @@ ValidateInputExcelFileContent <- function(inputFile,
   filename <- file.path(custom_dir, "violation_offsets_exceed_range.csv")
   description <- "Seasonality offsets should represent an adjustment period within 1 year (12 months) of the originating event,
   so values less than -11 or greater than 11 are not accepted."
-  severity <- "error"
+  severity <- "warning"
   SO <- read_xlsx(inputFile ,sheet="SeasonalityOffsets")
   violation <- SO %>% filter_at(vars(starts_with('Offset')), any_vars(.< -11 | .>11))
   .custom_check_write_result(description, filename, severity, violation)

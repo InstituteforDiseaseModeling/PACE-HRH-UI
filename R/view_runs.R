@@ -31,24 +31,26 @@ viewRunsUI <- function(id) {
     fluidRow(
       div(id = ns("search_msg"), "Searching and processing results, this may take awhile...", div(class = "spinner"), style = "display: none;"),
     ),
-    tabsetPanel(
-      id = "main-tabs",
-      # --------Insert tabs UI calls here, comma separated --------
-      plotTabUI(id = ns("slide-4-tab"),
-                title = "By Clinical Category"),
-      plotTabUI(id = ns("by-CadreRoles-tab"),
-                title = "By Cadre Roles"),
-      plotTabUI(id = ns("by-ServiceCat-tab"),
-                title = "By Service Category"),
-      plotTabUI(id = ns("by-ServiceTile-tab"),
-                  title = "By Service Category Tiles"),
-      plotTabUI(id = ns("service-over-time-tab"),
-                title = "Service change over time"),
-      plotTabUI(id = ns("seasonality-tab"),
-                title = "Seasonality"),
-    ),
+      div(
+        id = ns("plot_area_container"),
+        tabsetPanel(
+          id = "main-tabs",
+          # --------Insert tabs UI calls here, comma separated --------
+          plotTabUI(id = ns("slide-4-tab"),
+                    title = "By Clinical Category"),
+          plotTabUI(id = ns("by-CadreRoles-tab"),
+                    title = "By Cadre Roles"),
+          plotTabUI(id = ns("by-ServiceCat-tab"),
+                    title = "By Service Category"),
+          plotTabUI(id = ns("by-ServiceTile-tab"),
+                    title = "By Service Category Tiles"),
+          plotTabUI(id = ns("service-over-time-tab"),
+                    title = "Service change over time"),
+          plotTabUI(id = ns("seasonality-tab"),
+                    title = "Seasonality"),
+        ),
+      )
   )
-  
 }
 
 # Server logic for the view runs module
@@ -84,7 +86,7 @@ viewRunsServer <- function(id, rv, store) {
       }
     }
     
-    showWarningModalNoFiles <- function(text="") {
+    showWarningModalIllegalFiles <- function(text="") {
       if (text==""){
         text <- "You do not have any result to view, please run at least one simulation!"
       }
@@ -157,11 +159,11 @@ viewRunsServer <- function(id, rv, store) {
       selectedRows(selections)
       
       # only allow up to 4 comparison
-      if (sum(selections) > 4) {
-        selections[input$rowSelected$index + 1] <- FALSE
-        selectedRows(selections)
-        session$sendCustomMessage(type = "uncheckCheckbox", input$rowSelected$index)
-      }
+      # if (sum(selections) > 4) {
+      #   selections[input$rowSelected$index + 1] <- FALSE
+      #   selectedRows(selections)
+      #   session$sendCustomMessage(type = "uncheckCheckbox", input$rowSelected$index)
+      # }
       # stay on the same page
       if (!is.null(input$currentPage)) {
         dataTableProxy('history_table') %>% selectPage(as.numeric(input$currentPage))
@@ -207,19 +209,22 @@ viewRunsServer <- function(id, rv, store) {
     observeEvent(input$compare_btn, {
       if(!is.null(rv$df_history)){
         selected <- which(selectedRows())
-        if (length(selected) >0 ){
+        if (length(selected) >0 & length(selected) <= 4){
           shinyjs::show(id=ns("search_msg"), asis = TRUE)
           # print(paste0("selected ", length(selected)))
           test_selected <- rv$df_history[selected, 'name']
           redraw(combine_selected_data(selected))    
           shinyjs::hide(id=ns("search_msg"), asis = TRUE)
         }
+        else if (length(selected) > 4){
+          showWarningModalIllegalFiles("You can only select up to four results to compare.")
+        }
         else{
-          showWarningModalNoFiles("You did not select any result to compare.")
+          showWarningModalIllegalFiles("You did not select any result to compare.")
         }
       }
       else{
-        showWarningModalNoFiles()
+        showWarningModalIllegalFiles()
       }
     })
     
@@ -239,7 +244,7 @@ viewRunsServer <- function(id, rv, store) {
             )
           )
         }else{
-          showWarningModalNoFiles("You did not select any result to delete.")
+          showWarningModalIllegalFiles("You did not select any result to delete.")
         }
       }
     })
@@ -253,12 +258,13 @@ viewRunsServer <- function(id, rv, store) {
         tryCatch({
           for (testname in test_selected){
             # remove localstorage entries
-            shinyjs::runjs(sprintf("delete_tests(['%s'], '%s', '%s')", testname, ns("test_history"), ns("history_table")))
+            shinyjs::runjs(sprintf("delete_tests(['%s'], '%s', '%s', '%s')", testname, ns("test_history"), ns("history_table"), ns("plot_area_container")))
             resultdir <- file.path(result_root, testname)
             if (dir.exists(resultdir)){
               unlink(resultdir, recursive = TRUE)
             }
           }
+          shinyjs::runjs(sprintf("get_test_names('%s', '%s')", ns("test_names_loaded"), ns("test_history")))
         },
         error = function(e){
             session$sendCustomMessage("notify_handler", paste0("Error occurred deleting ", test_selected))
@@ -276,40 +282,41 @@ viewRunsServer <- function(id, rv, store) {
           ))
           rv$sim_refresh <- FALSE   
         }
-      
-        if (redraw()){
-          plotTabServer(
-            id = "slide-4-tab",
-            plotting_function = "get_slide_4_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "by-CadreRoles-tab",
-            plotting_function = "byCadreRoles_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "by-ServiceCat-tab",
-            plotting_function = "byServiceCat_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "by-ServiceTile-tab",
-            plotting_function = "byServiceTile_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "service-over-time-tab",
-            plotting_function = "serviceOverTime_plot",
-            rv = rv_results)
-          
-          plotTabServer(
-            id = "seasonality-tab",
-            plotting_function = "seasonality_plot",
-            rv = rv_results)
-          
-          redraw(FALSE)
-        }
+       if (redraw()){
+            shinyjs::show(ns("plot_area_container"), asis = TRUE)
+            plotTabServer(
+              id = "slide-4-tab",
+              plotting_function = "get_slide_4_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "by-CadreRoles-tab",
+              plotting_function = "byCadreRoles_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "by-ServiceCat-tab",
+              plotting_function = "byServiceCat_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "by-ServiceTile-tab",
+              plotting_function = "byServiceTile_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "service-over-time-tab",
+              plotting_function = "serviceOverTime_plot",
+              rv = rv_results)
+            
+            plotTabServer(
+              id = "seasonality-tab",
+              plotting_function = "seasonality_plot",
+              rv = rv_results)
+            
+            redraw(FALSE)
+          }
+         
        
     })
     
@@ -345,11 +352,11 @@ viewRunsServer <- function(id, rv, store) {
           shinyjs::show(ns("downloadZipBtn"), asis = TRUE)
         }
         else{
-          showWarningModalNoFiles("You did not select any result to download.")
+          showWarningModalIllegalFiles("You did not select any result to download.")
         }
       }
       else{
-        showWarningModalNoFiles()
+        showWarningModalIllegalFiles()
       }
     })
     
@@ -395,10 +402,10 @@ viewRunsServer <- function(id, rv, store) {
           shinyjs::show(ns("downloadPDFBtn"), asis = TRUE)
         }
         else{
-          showWarningModalNoFiles("You did not select any result to print.")
+          showWarningModalIllegalFiles("You did not select any result to print.")
         }
       } else{
-        showWarningModalNoFiles()
+        showWarningModalIllegalFiles()
       }
     })
     

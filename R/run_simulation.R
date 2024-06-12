@@ -53,6 +53,21 @@ sim_tabs <- function(ns){
            fluidRow(
              column(12, HTML(gsub("\n", "<br>", validation_intro_str)))
            ),
+           fluidRow(
+             column(12, actionButton(ns("run_validation_report_now"), "Run Advanced Validation Report"))
+           ),
+           fluidRow(
+             column(12,  HTML("<br>"))
+           ),
+           fluidRow(
+             div(id = ns("wait_msg"), "Validating your configuration, this may take awhile...", div(class = "spinner"), style = "display: none;"),
+           ),
+           fluidRow(
+             column(
+               4,
+               uiOutput(ns("download_validation_report"))
+             )
+           ),
            tabsetPanel(
              id ="validation",
              tabPanel("Population Pyramid", simpleplotUI(ns("population-tab"))),
@@ -103,7 +118,9 @@ runSimulationUI <- function(id) {
       fluidRow(
         column(12, div(sim_tabs(ns = ns)), class='sim_row'),
       ),
-      
+      fluidRow(
+        column(12, HTML("<br>"))
+      ),
       fluidRow(
         column(2, hidden(div(id = ns("prevDiv"), 
                              actionButton(ns("prevBtn"), "Previous"), align="center"))),
@@ -134,6 +151,53 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
       print(gsub("\n", "", js_code))
       shinyjs::runjs(gsub("\n", "", js_code))
     }
+    
+    # handle Validation Report generation
+    observeEvent(input$run_validation_report_now, {
+      shinyjs::show(ns("wait_msg"), asis=TRUE)
+      report <- ValidateConfig(rv$input_file)
+      if (!is.null(report)){
+        # report may contain error
+        if (!file.exists(report)){
+          output$validate_result_html <- renderUI({
+            HTML(report)
+          })
+        }
+        else{
+          output$download_validation_report <- renderUI({
+            downloadButton(ns("downloadValidationData"),
+                           "Download Validation Report",
+                           icon = icon("download"),
+                           onclick = sprintf('Shiny.setInputValue("%s", true);', ns("download_report_clicked"))
+            )
+          })
+          output$downloadValidationData <- downloadHandler(
+            filename = function() {
+              paste("validation_report.html")
+            },
+            content = function(file) {
+              file.copy(report, file)
+            }
+          ) 
+        }
+      }
+      else{
+        output$download_validation_report <- renderUI({
+          HTML("Generating validation report failed.")
+        })
+      }
+      shinyjs::hide(ns("wait_msg"), asis=TRUE)
+      shinyjs::show(ns("download_validation_report"), asis = TRUE)
+    })
+    
+    observeEvent(input$download_report_clicked, {
+      # Hide the validation report download button after it's clicked
+      if (input$download_report_clicked){
+        print("report downloaded. remove the link...")
+        shinyjs::runjs(sprintf('Shiny.setInputValue("%s", false);', ns("download_report_clicked")))
+        shinyjs::hide(ns("download_validation_report"), asis = TRUE)
+      }
+    })
     
     # Set sheet data based on input scenario
     observe({
@@ -195,21 +259,20 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         isolate(updateSelectInput(session, "region", selected=rv$current_region))
       }
     })
-  
-
+    
     ### handle conditional button appearance
     observe({
-      hide("prevDiv")
-      hide("nextDiv")
-      show("skipAll")
+      shinyjs::hide("prevDiv")
+      shinyjs::hide("nextDiv")
+      shinyjs::show("skipAll")
       if(rv$page > 1){
-        show("prevDiv")
+        shinyjs::show("prevDiv")
       }
       if(rv$page <= length(sim_pages)){
-        show("nextDiv")
+        shinyjs::show("nextDiv")
       }
       if(rv$page >= which(sim_pages == "Run Simulation")){
-        hide("skipAll")
+        shinyjs::hide("skipAll")
         updateActionButton(session, "nextBtn", label = "Go To Results")
         shinyjs::runjs(sprintf('document.getElementById("%s").classList.remove("green-button");', ns("nextBtn")))
         shinyjs::runjs(sprintf('document.getElementById("%s").classList.add("green-button");', ns("run_simBtn")))
@@ -444,9 +507,11 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
     observe({
       
       rv$trial_num <- ifelse(is.null(input$num_trials), 0, input$num_trials)
+      rv$num_tasks <- nrow(rv$task_input)
+      rv$num_years <- rv$end_year - rv$start_year
       
       output$run_estimate <- renderText({
-        get_estimated_run_stats(rv$trial_num)
+        get_estimated_run_stats(rv$trial_num, rv$num_tasks, rv$num_years)
       })
       
     })
@@ -479,6 +544,7 @@ runSimulationServer <- function(id, return_event, rv, store = NULL) {
         removeModal()
         output$errorRunName <- renderText({""})
         # Update config again if anything changed before running sim
+        shinyjs::html(id="log-display", "", asis=TRUE)
         shinyjs::show(id="sim_logger_area", asis=TRUE)
         rv$sim_triggered <- TRUE 
         trigger_file_saving(ns)

@@ -190,6 +190,15 @@ IF EXIST "%R_PATH%" (
 
     ECHO R 4.4.0 installation complete.
 
+    REM Install pandoc
+    SET DOWNLOAD_PANDOC_PATH=pandoc-3.2-windows-x86_64.msi
+    ECHO Downloading Pandoc...
+    curl -o %DOWNLOAD_PANDOC_PATH% https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-windows-x86_64.msi
+    ECHO Installing Pandoc
+    CMD /c "msiexec /i %DOWNLOAD_PANDOC_PATH% /quiet /norestart"
+    DEL %DOWNLOAD_PANDOC_PATH%
+
+
     ECHO Install packages...
     REM Run the R script in silent mode
    
@@ -222,7 +231,7 @@ SET PORT=8888
 ECHO Starting Shiny app on port %PORT%...
 ECHO Using %R_PATH% ON %SHINY_DIR%
 
-START /MIN "" %R_PATH% -e "shiny::runApp(appDir='%SHINY_DIR%', port=%PORT%, launch.browser=TRUE)"
+START /MIN "" %R_PATH% -e "Sys.setenv(PATH = paste(Sys.getenv('PATH'), ';', Sys.getenv('LocalAppData'), '\\Pandoc', sep='')); shiny::runApp(appDir='%SHINY_DIR%', port=%PORT%, launch.browser=TRUE)"
 ECHO Your default browser will be opened for PACE-HRH-UI in a few seconds ...
 
 GOTO end

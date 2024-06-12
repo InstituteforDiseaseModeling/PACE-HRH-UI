@@ -1,17 +1,39 @@
 # Function to estimate runtime statistics based on iterations
 # TODO: determine the logic to estimate file size and run time
-get_estimated_run_stats <- function (iteration){
+get_estimated_run_stats <- function (iterations, num_tasks, num_years){
   
-  if (iteration >0 ){
-    runtime <- iteration* 10
-    expected_size <-  iteration
+  #Function to generate scaling ratio
+  run_benchmark = function(n=200){
+    
+    reference <- 0.09344006 # Time in seconds that a fast computer takes to run this benchmark 
+    
+    #Start timing
+    start <- Sys.time() 
+    matrix_a <- matrix(rnorm(n*1000),nrow=n, ncol=1000)
+    # Perform the big computation 
+    result <- t(matrix_a) %*% matrix_a
+    timeelapsed <- Sys.time() - start # Stop timing
+    
+    ratio <- as.numeric(timeelapsed) / reference
+    
+    return(ratio)
   }
+  
+  scalingratio <- run_benchmark() * 1.10
+  
+  runtime= -18.51 + .03955 * iterations + .9659 * num_years + .2366 * num_tasks
+  runtime = runtime * scalingratio
+  runtime = max(round(runtime / 60), 1)
+  
+  expected_size = -12740 + 18.29 *iterations + 390.5 * num_years + 296.7 * num_tasks
+  expected_size = max(round(expected_size), 3) 
+  
   
   runtime <- ifelse(runtime >0 , runtime, "--:--:--")
   expected_size <- ifelse(expected_size >0 , expected_size, "--.--")
   
-  result_text <- sprintf("Given your number of replications, This model will take %s seconds to run, 
-                             The detailed result files, if you choose to download them, will be approximately %s mb.", runtime, expected_size)
+  result_text <- sprintf("Given your number of replications, This run time may take up to %s minutes to complete, 
+                             The detailed result files, if you choose to download them, will be approximately %s KB.", runtime, expected_size)
   result_text
 }
 
@@ -178,4 +200,26 @@ run_pacehrh_simulation <- function(rv, input_file){
     new_rv = NULL
   })
   return(new_rv)
+}
+
+# Run validation config
+ValidateConfig <- function(input_file){
+  logdir <- tempdir()
+  outfilename <- basename(sub("\\.xlsx$", ".html", input_file))
+  report <- NULL
+  tryCatch(
+    {
+      rmarkdown::render(input = "validation_report.Rmd",
+                        output_format = "html_document",
+                        output_file = outfilename, 
+                        output_dir = logdir,
+                        params = list(inputFile = input_file, outputDir = logdir))
+      
+      report <- file.path(logdir, outfilename)
+    }, error = function(e){
+      report <- paste0("An error occurred: ", e$message)
+      print(e$message)
+    }
+  )
+  report
 }
