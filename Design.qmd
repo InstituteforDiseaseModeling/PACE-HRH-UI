@@ -72,7 +72,7 @@ graph TD
 
 -   <b>Global.R</b>: Contains global variables and functions accessible across both the UI and server, used for app settings and loading configuration files. It is a special script that is executed once when the Shiny app is launched, and before the ui and server components are created. In this script we handle downloading the template config file and loading the regional configuration files.
 
--   <b>validation_report.Rmd</b> This serves as the validation report template, along with definition in config/validation/rules, it is used by ValidateInput.R to generate a validation report. This can be useful if you are modifying the config data and want to make sure it complies with the simulation engine. You can read more about the validate package (here)\[<https://cran.r-project.org/web/packages/validate/index.html>\].
+-   <b>validation_report.Rmd</b> This serves as the validation report template, along with definition in config/validation/rules, it is used by ValidateInput.R to generate a validation report. This can be useful if you are modifying the config data and want to make sure it complies with the simulation engine. You can read more about the validate package [here](https://cran.r-project.org/web/packages/validate/index.html).
 
 -   <b>www folder</b>: Contains static assets like images, CSS files, and JavaScript files. These resources are served directly to the browser and can be referenced in the UI code. We have used Shinyjs package to run some custom javascript scripts, you can add more custom scripts to this folder.
 
