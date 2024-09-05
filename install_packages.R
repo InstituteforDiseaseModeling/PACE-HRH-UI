@@ -11,7 +11,7 @@ pkgnames <- c(
 'devtools', 'DT', 'shiny', 'shinyjs', 'shinyalert', 'shinyWidgets', 'shinythemes', 'shinycssloaders', 'plotly', 'truncnorm', 'shinyBS', 'openxlsx', 
 'validate','readxl', 'dplyr','ggplot2', 'tidyr', 'kableExtra', 'stringr', 'plyr', 'reshape2', 'scales', 'glue', 'logr', 'tidyverse', 'showtext',
 'treemapify', 'knitr', 'mockr', 'bsicons',
-'shinytest2', 'uuid','ggrepel', 'assertthat'
+'shinytest2', 'uuid','ggrepel', 'assertthat', 'zip'
 )
 
 print(paste0("Install Packages from Cran : ", pkgnames))

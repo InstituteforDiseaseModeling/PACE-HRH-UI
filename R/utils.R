@@ -1,4 +1,5 @@
 library(uuid)
+library(zip)
 
 load_working_config <- function(){
 
@@ -85,7 +86,7 @@ zip_folders <- function(folders_to_zip){
         )
     )
   )
-  print(paste0("Folders zipped successfully into", output_zip_file))
+  print(paste0("Folders zipped successfully into ", output_zip_file))
   return (output_zip_file)
 }
 
