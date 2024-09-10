@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.553">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Meikang Wu">
+
+<title>PaceHRH UI Technical Knowledge Trasnfer Document</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="Design_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Design_files/libs/quarto-html/quarto.js"></script>
+<script src="Design_files/libs/quarto-html/popper.min.js"></script>
+<script src="Design_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Design_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Design_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Design_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Design_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Design_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Design_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="Design_files/libs/quarto-diagram/mermaid.min.js"></script>
+<script src="Design_files/libs/quarto-diagram/mermaid-init.js"></script>
+<link href="Design_files/libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#working-with-github.-update-files-and-pull-requests" id="toc-working-with-github.-update-files-and-pull-requests" class="nav-link active" data-scroll-target="#working-with-github.-update-files-and-pull-requests">Working with Github. Update Files and Pull Requests</a></li>
+  <li><a href="#architecture-diagram" id="toc-architecture-diagram" class="nav-link" data-scroll-target="#architecture-diagram">Architecture Diagram</a></li>
+  <li><a href="#code-structure-entensibility-and-limitation" id="toc-code-structure-entensibility-and-limitation" class="nav-link" data-scroll-target="#code-structure-entensibility-and-limitation">Code Structure, Entensibility and Limitation</a></li>
+  <li><a href="#deployment-options-and-other-considerations" id="toc-deployment-options-and-other-considerations" class="nav-link" data-scroll-target="#deployment-options-and-other-considerations">Deployment Options and other considerations</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">PaceHRH UI Technical Knowledge Trasnfer Document</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Meikang Wu </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="working-with-github.-update-files-and-pull-requests" class="level2">
+<h2 class="anchored" data-anchor-id="working-with-github.-update-files-and-pull-requests">Working with Github. Update Files and Pull Requests</h2>
+<ul>
+<li><b>Forking the Repository</b></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="screenshots/github_workflow.png" class="img-fluid figure-img"></p>
+<figcaption>illustrated workflow</figcaption>
+</figure>
+</div>
+<p>To make changes without affecting the original project, you can create a separate copy by forking the repository. <img src="screenshots/fork_repo.png" class="img-fluid"></p>
+<p>This will bring you to the next page where you can select the account you want to fork the repository to.</p>
+<p><img src="screenshots/fork_repo2.png" class="img-fluid"></p>
+<ul>
+<li><p><b>Develop your code in a new branch and create pull request</b> After forking the repository, you can create a new branch to develop your code and test the app. Once you are done, you are free to push the work into your own fork. If you want to contribute back to the main repository, for example, fixing a critical bug or having a major improvement feature; you can create a pull request to ask for reviewing and merging your changes to the original repository. (Decision is subject to the approval and discretion of IDM.)</p></li>
+<li><p><b>Package the release</b> A GitHub Release is a way to package and distribute a specific version of your development in the repository. It is typically used to share a specific version of the codebase, including compiled binaries, installers, or other executables, along with the corresponding source code. It is recommended to follow the <a href="https://semver.org/spec/v2.0.0.html#introduction">semantic versioning logic</a> <img src="screenshots/release.png" class="img-fluid"></p></li>
+</ul>
+<p><b>As the current version of the app (2.0.0) The installation is simply using a commandline <a href="https://github.com/InstituteforDiseaseModeling/PACE-HRH-UI/blob/main/start_pace_ui.bat">script</a> that only supports windows systems (tested on windows 10)</b>, the script will download the specific release version (You can manually change the default version if you create a new version, or enter the version when the script prompts). In the future we suggest dockerize the app for better handling of the deployment. <b>You can find A Dockerfile and docker-compose file in the repository but they are not actively maintained</b>, you can use them as a template to build your own docker image. <b>We suggest to use R version 4.4.0 or later, we have enforced this in the <a href="https://github.com/InstituteforDiseaseModeling/PACE-HRH-UI/blob/ee83ce01e195e79667944723d2fa6534570be7e2/start_pace_ui.bat#L184">installation script</a> as of now.</b> There is a known security risk for earlier versions, see <a href="https://posit.co/blog/posit-patched-binaries-for-r-versions-4-0-0/">this link</a> for more details.</p>
+</section>
+<section id="architecture-diagram" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-diagram">Architecture Diagram</h2>
+<p>Below is a simplified architecture diagram to show PACEHRH-UI shinyapps and its dependent components, the MVP version does not support user management and deployment stories. For demo purpose, the user data is stored in the local storage for it to remain available even after the user closes and reopens their browser. The storage is isolated between different users and different browser profiles. The simulation results are currently stored in the server filesystem.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">graph TD
+  spacer1[ ]:::invisible
+  classDef subgraphTitle font-size:30px,color:Red
+  classDef text font-size:16px;
+  subgraph User
+      style User fill:#00FF00,fill-opacity:0.1
+      Browser[&lt;b&gt;Browser profile&lt;/b&gt;]:::text
+      LocalStorage[&lt;b&gt;HTML5 Local Storage&lt;/b&gt;]:::text
+  end
+  class User subgraphTitle;
+
+  subgraph Server
+      style Server fill:#0000FF,fill-opacity:0.1
+      R[&lt;b&gt;R base and dependent packages&lt;/b&gt;]
+      ShinyApp[&lt;b&gt;Shiny App&lt;/b&gt;]
+      Pace[&lt;b&gt;PACEHRH Package&lt;/b&gt;]
+      GlobalR[&lt;b&gt;global.R&lt;/b&gt;]
+      ConfigFiles[&lt;b&gt;Config Files&lt;/b&gt;]
+      FileSystem[&lt;b&gt;Server Filesystem&lt;/b&gt;]
+      SQLite[(&lt;b&gt;SQLite Or other storage options&lt;/b&gt;)]
+  end
+  class Server subgraphTitle;
+
+  User --&gt;|Creates Simulation Request| ShinyApp
+  ShinyApp --&gt;|Stores session Identifier and Simulation file Index| LocalStorage
+  LocalStorage --&gt;|isolated store| Browser
+  ShinyApp --&gt;|Global settings| GlobalR
+  ShinyApp --&gt;|Set simulation parameters| ConfigFiles
+  ShinyApp --&gt;|Smulation Computation| Pace
+  ShinyApp --&gt;|Stores Simulation Results| FileSystem
+  Pace --&gt; R
+  FileSystem --&gt; |Download results|User
+  FileSystem -.-&gt;|Optional| SQLite
+
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="code-structure-entensibility-and-limitation" class="level2">
+<h2 class="anchored" data-anchor-id="code-structure-entensibility-and-limitation">Code Structure, Entensibility and Limitation</h2>
+<ul>
+<li><p><b>app.R</b>: This serves as the main entry point for the Shiny application that defines the UI (ui), server logic (server). You should be able to start the app by running this script from Rstudio.</p></li>
+<li><p><b>Global.R</b>: Contains global variables and functions accessible across both the UI and server, used for app settings and loading configuration files. It is a special script that is executed once when the Shiny app is launched, and before the ui and server components are created. In this script we handle downloading the template config file and loading the regional configuration files.</p></li>
+<li><p><b>validation_report.Rmd</b> This serves as the validation report template, along with definition in config/validation/rules, it is used by ValidateInput.R to generate a validation report. This can be useful if you are modifying the config data and want to make sure it complies with the simulation engine. You can read more about the validate package <a href="https://cran.r-project.org/web/packages/validate/index.html">here</a>.</p></li>
+<li><p><b>www folder</b>: Contains static assets like images, CSS files, and JavaScript files. These resources are served directly to the browser and can be referenced in the UI code. We have used Shinyjs package to run some custom javascript scripts, you can add more custom scripts to this folder.</p></li>
+<li><p><b>R folder</b>: Stores R scripts with modules and functions used in Shiny app. Each module typically consists of a UI and server function, allowing for reusability and better organization. Example: A module for handling results plots can be found in <a href="https://github.com/InstituteforDiseaseModeling/PACE-HRH-UI/blob/main/R/plotTab.R">plotTab.R</a> In the MVP version, the app is following modular design but not perfectly refactored. It is recommend to further refactor the code to suit your customization.</p></li>
+<li><p><b>config folder</b>: Contain configuration files used for the app, for more details, please go to the <a href="https://github.com/InstituteforDiseaseModeling/PACE-HRH-UI/blob/main/Configuration.md">Configuration guide</a></p></li>
+<li><p><b>tests folder</b>: Contains test scripts, currently only shinytest snapshot tests are available, We encourage you to add more unit tests for specific functions that you will be developing. You can also add more testing steps to the <a href="https://github.com/InstituteforDiseaseModeling/PACE-HRH-UI/blob/main/.github/workflows/shiny-test.yml">Github Action</a> and make sure your tests passed before merging the code.</p></li>
+<li><p><b>Resource Requirement and Current limitation</b></p>
+<p><b>For running the demo data simulation, it is required to have at least 2GB memory and 2GB disk space to start with</b>, and keep in mind the disk space use will grow as you run more simulations. PACEHRH can be a long-running process requiring significant memory and CPU resources depending on the size of data and number of iterations, The MVP version is not optimizing the user experiences, you may consider implementing methods like asynchronous processing or caching if there are many users running the simulation at the same time.</p></li>
+<li><p><b>Use Html5 localStorage considerations</b> For this demo we use localstorage as a simple workaround to handle multiple users running the same application. However, it is not a secure way to store sensitive data. You need to be cautious if this app will be deployed to production:</p>
+<ul>
+<li>Sensitive Data: Avoid storing sensitive information (e.g., passwords, tokens) in localStorage, as it is accessible through JavaScript and can be exploited if your site is compromised.</li>
+<li>XSS Attacks: localStorage is vulnerable to Cross-Site Scripting (XSS) attacks. If an attacker can inject malicious JavaScript into your site, they can access and manipulate data stored in localStorage. You should implement proper input validation to avoid this.</li>
+<li>Encryption: Consider encrypting data before storing it in localStorage to add an extra layer of security.</li>
+<li>localstorage does not work cross browser (if users create a simulation using chrome, they will not be able to retrieve it from Edge.)</li>
+</ul></li>
+</ul>
+</section>
+<section id="deployment-options-and-other-considerations" class="level2">
+<h2 class="anchored" data-anchor-id="deployment-options-and-other-considerations">Deployment Options and other considerations</h2>
+<ul>
+<li><p><b>Deployment options</b></p>
+<ul>
+<li><p><b>Shinyapps.io</b> It can be deployed directly from RStudio. It is hosted in the cloud and supports automatic scaling and load balancing. it will incur subscription cost for higher tiers. click <a href="https://www.shinyapps.io/">here</a> more more details.</p></li>
+<li><p><b>Dockerized Shiny Apps</b> It provides consistent environment across development, testing, and production. It is easy to scale and deploy to a virtual machine or using container orchestration tools like Kubernetes. However it requires knowledge of Docker and container orchestration. If installing on a local machine, some overhead of container management is required.</p></li>
+<li><p><b>ShinyLive</b> It allows Shiny apps to run entirely in the client side using WebAssembly, with no need for a server and zero cost. However, it is more suitable for simpler applications due to browser resource constraints. For PACEHRH simulation, it may take a long time to run and consume a lot of memory, we have not tested this approach and the idea is also less mature compared to traditional Shiny deployments. Click <a href="https://posit-dev.github.io/r-shinylive/">here</a> for more details.</p></li>
+<li><p><b>Posit Connect: </b> This is an on-premises or cloud-hosted server that your organization installs and manages. It provides full control over the environment, also integrated with RStudio. There is a licensing cost to host the service. Click <a href="https://posit.co/products/enterprise/connect/">here</a> for more details.</p></li>
+</ul></li>
+<li><p><b>User Management</b></p></li>
+</ul>
+<p>The MVP version does not support user management, you may consider adding user authentication and authorization to restrict access to the app, by doing this, you will be able to track who is running the simulation and manage the simulation results from the server side.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

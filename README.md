@@ -58,6 +58,8 @@ please follow the [upgrade existing app guide](./Update.md)
 ### Note for App Maintainers
 The PACE-HRH-UI app comes with predefined configurations files aim for demo purposes, if you wish to develop your own custom configurations, please follow the [configuration guide](./Configuration.md)
 
+Please refer to this [Document](https://institutefordiseasemodeling.github.io/PACE-HRH-UI/Design.html) for current state and limitations.
+
 ### Screenshots
 
 -   From Homepage you can start a new simulation from scratch or use a
