@@ -14,7 +14,7 @@ diverse needs. <br><br> PACE-HRH-UI is a shinyapp that encapulates the
 package which employs stochastic simulation for capacity projections
 based on excel spreadsheets configurations, it offers users a friendly
 interface to visualization the input data and simulation results. Users
-can also download and coompare results from different run for further
+can also download and compare results from different run for further
 analysis.
 
 ### Download the app
